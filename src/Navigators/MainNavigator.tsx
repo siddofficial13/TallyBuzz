@@ -5,6 +5,7 @@ import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import auth from '@react-native-firebase/auth';
 import HomeScreen from '../Screens/HomeScreen';
 import LoginScreen from '../Screens/LoginScreen';
 import SignUpScreen from '../Screens/SignUpScreen';
@@ -23,22 +24,36 @@ export type RootStackParamList = {
   ProfileScreen: undefined;
 };
 
-const { width } = Dimensions.get('window')
+const { width } = Dimensions.get('window');
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const MainNavigator = () => {
   const navigationRef = useNavigationContainerRef();
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(undefined);
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState(null);
+
+  // Handle user state changes
+  const onAuthStateChanged = (user:any) => {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  };
 
   useEffect(() => {
-    const unsubscribe = navigationRef.addListener('state', () => {
+    const unsubscribeAuth = auth().onAuthStateChanged(onAuthStateChanged);
+    const unsubscribeNav = navigationRef.addListener('state', () => {
       const route = navigationRef.getCurrentRoute();
       setCurrentRoute(route?.name);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      unsubscribeNav();
+    };
   }, [navigationRef]);
+
+  if (initializing) return null; // You can return a loading spinner here
 
   const showHeaderFooter = ['HomePageScreen', 'UploadPost', 'ProfileScreen'].includes(currentRoute);
 
@@ -46,12 +61,20 @@ const MainNavigator = () => {
     <NavigationContainer ref={navigationRef}>
       {showHeaderFooter && <Header />}
       <Stack.Navigator>
-        <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="SignUpScreen" component={SignUpScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="HomePageScreen" component={HomePageScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="UploadPost" component={UploadPost} options={{ headerShown: false }} />
-        <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
+        {user ? (
+          <>
+            {/* <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} /> */}
+            <Stack.Screen name="HomePageScreen" component={HomePageScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="UploadPost" component={UploadPost} options={{ headerShown: false }} />
+            <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="SignUpScreen" component={SignUpScreen} options={{ headerShown: false }} />
+          </>
+        )}
       </Stack.Navigator>
       {showHeaderFooter && <Footer />}
     </NavigationContainer>
