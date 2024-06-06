@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import {RouteProp, useRoute} from '@react-navigation/native';
+import storage from '@react-native-firebase/storage';
 
 interface Post {
   title: string;
   description: string;
-  imageUri: string;
+  imageUrl: string; // Updated to imageUrl to match the upload structure
   likes: string[];
   createdAt: any;
 }
@@ -16,7 +17,7 @@ interface User {
 }
 
 type RootStackParamList = {
-  PostScreen: { postId: string };
+  PostScreen: {postId: string};
 };
 
 type PostScreenRouteProp = RouteProp<RootStackParamList, 'PostScreen'>;
@@ -27,7 +28,7 @@ const PostScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const route = useRoute<PostScreenRouteProp>();
-  const { postId } = route.params;
+  const {postId} = route.params;
 
   useEffect(() => {
     const fetchPostAndLikes = async () => {
@@ -40,8 +41,13 @@ const PostScreen: React.FC = () => {
         }
 
         const postData = postDoc.data() as Post;
-        const likesPromises = postData.likes.map(async (userId) => {
-          const userDoc = await firestore().collection('Users').doc(userId).get();
+
+        // Fetch user names who liked the post
+        const likesPromises = postData.likes.map(async userId => {
+          const userDoc = await firestore()
+            .collection('Users')
+            .doc(userId)
+            .get();
           return userDoc.exists ? (userDoc.data() as User).name : 'Unknown';
         });
 
@@ -77,12 +83,14 @@ const PostScreen: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.postTitle}>{post.title}</Text>
-      {post.imageUri ? (
-        <Image source={{ uri: post.imageUri }} style={styles.postImage} />
+      {post.imageUrl ? (
+        <Image source={{uri: post.imageUrl}} style={styles.postImage} />
       ) : null}
       <Text style={styles.postDescription}>{post.description}</Text>
       <Text style={styles.postDate}>
-        {post.createdAt && post.createdAt.toDate ? new Date(post.createdAt.toDate()).toLocaleString() : 'Unknown date'}
+        {post.createdAt && post.createdAt.toDate
+          ? new Date(post.createdAt.toDate()).toLocaleString()
+          : 'Unknown date'}
       </Text>
       <Text style={styles.likesTitle}>Liked by:</Text>
       {likedUsers.length > 0 ? (

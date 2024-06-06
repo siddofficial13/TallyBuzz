@@ -11,21 +11,20 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../Navigators/MainNavigator';
-import { StackActions } from '@react-navigation/native';
-
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../Navigators/MainNavigator';
+import {StackActions} from '@react-navigation/native';
 
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
-const LoginScreen = ({ navigation, route }: LoginProps) => {
+const LoginScreen = ({navigation, route}: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // const navigation = useNavigation();
-  const { screen, params } = route.params || {};
+  const {screen, params} = route.params || {};
 
   const handleLogin = async () => {
     try {
@@ -36,8 +35,10 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
           password,
         );
 
-        console.log(isUserLogin)
-        navigation.dispatch(StackActions.replace(screen || 'HomeScreen', params));
+        console.log(isUserLogin);
+        navigation.dispatch(
+          StackActions.replace(screen || 'HomePageScreen', params),
+        );
       } else {
         Alert.alert('Please enter your credentials');
       }
