@@ -12,28 +12,37 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-const LoginScreen = () => {
-  const navigation = useNavigation();
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigators/MainNavigator';
+import { StackActions } from '@react-navigation/native';
+
+
+type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
+
+const LoginScreen = ({ navigation, route }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // const navigation = useNavigation();
+  const { screen, params } = route.params || {};
+
   const handleLogin = async () => {
     try {
       if (email.length > 0 && password.length > 0) {
+        // Perform login logic here...
         const isUserLogin = await auth().signInWithEmailAndPassword(
           email,
           password,
         );
-        console.log(isUserLogin);
-        navigation.navigate('HomePageScreen');
+
+        console.log(isUserLogin)
+        navigation.dispatch(StackActions.replace(screen || 'HomeScreen', params));
       } else {
         Alert.alert('Please enter your credentials');
       }
-    } catch (error) {
-      console.log('Error from the handle Login Fucntion', error);
+    } catch (error: any) {
+      console.log(error);
     }
   };
 

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment'; // Import moment for date formatting
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const { width } = Dimensions.get('window');
 
@@ -56,6 +58,32 @@ const HomePageScreen = () => {
     return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
+  const sendNoti2 = async (userId: string, likerName: string, postId: string) => {
+    try {
+      const userDoc = await firestore().collection('Users').doc(userId).get();
+      const userToken = userDoc.data()?.fcmToken;
+
+      if (userToken) {
+        fetch('https://dec-accordingly-admin-difference.trycloudflare.com/send-noti-user', {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: userToken,
+            title: 'New Like',
+            body: `${likerName} liked your post!`,
+            data: { redirect_to: 'PostScreen', postId: postId },
+          }),
+        });
+      } else {
+        console.error('User token not found');
+      }
+    } catch (error) {
+      console.error('Error fetching user token: ', error);
+    }
+  };
+
   const handleLike = async (postId: string) => {
     try {
       const postRef = firestore().collection('posts').doc(postId);
@@ -74,6 +102,13 @@ const HomePageScreen = () => {
             post.id === postId ? { ...post, likes: updatedLikes } : post
           )
         );
+
+        // Send notification to the post owner
+        if (!postData.likes.includes(userId)) {
+          const likerDoc = await firestore().collection('Users').doc(userId).get();
+          const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
+          sendNoti2(postData.userId, likerName, postId);
+        }
       }
     } catch (error) {
       console.error('Error updating likes:', error);
@@ -90,6 +125,7 @@ const HomePageScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Header />
       <ScrollView contentContainerStyle={styles.mainContent}>
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
@@ -114,6 +150,7 @@ const HomePageScreen = () => {
           </View>
         ))}
       </ScrollView>
+      <Footer />
     </View>
   );
 };

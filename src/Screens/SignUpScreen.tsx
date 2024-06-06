@@ -11,10 +11,13 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
+
+
 const SignUpScreen = () => {
   const saveData = async () => {
     const userCredential = await auth().createUserWithEmailAndPassword(
@@ -22,7 +25,7 @@ const SignUpScreen = () => {
       password,
     );
     const userId = userCredential.user.uid;
-    // const token = await messaging().getToken();
+    const token = await messaging().getToken();
     firestore()
       .collection('Users')
       .doc(userId)
@@ -30,7 +33,7 @@ const SignUpScreen = () => {
         email: email,
         password: password,
         name: name,
-        // fcmToken: token,
+        fcmToken: token,
       })
       .then(() => {
         console.log('User added successfully!!');
