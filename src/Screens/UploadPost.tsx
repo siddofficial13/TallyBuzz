@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { launchImageLibrary } from 'react-native-image-picker';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function UploadPost() {
     const [title, setTitle] = useState('');
@@ -62,34 +64,39 @@ export default function UploadPost() {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.header}>Upload Post</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Post Title"
-                placeholderTextColor='#aaa'
-                value={title}
-                onChangeText={setTitle}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Post Description"
-                placeholderTextColor='#aaa'
-                value={description}
-                onChangeText={setDescription}
-                multiline
-            />
-            <TouchableOpacity style={styles.imagePicker} onPress={handleChooseImage}>
-                {imageUri ? (
-                    <Image source={{ uri: imageUri }} style={styles.image} />
-                ) : (
-                    <Text style={styles.imagePickerText}>Choose an Image</Text>
-                )}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Submit Post</Text>
-            </TouchableOpacity>
-        </ScrollView>
+        <View>
+            <Header />
+
+            <ScrollView contentContainerStyle={styles.container}>
+                <Text style={styles.header}>Upload Post</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Post Title"
+                    placeholderTextColor='#aaa'
+                    value={title}
+                    onChangeText={setTitle}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Post Description"
+                    placeholderTextColor='#aaa'
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                />
+                <TouchableOpacity style={styles.imagePicker} onPress={handleChooseImage}>
+                    {imageUri ? (
+                        <Image source={{ uri: imageUri }} style={styles.image} />
+                    ) : (
+                        <Text style={styles.imagePickerText}>Choose an Image</Text>
+                    )}
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                    <Text style={styles.buttonText}>Submit Post</Text>
+                </TouchableOpacity>
+            </ScrollView>
+            <Footer />
+        </View>
     );
 }
 

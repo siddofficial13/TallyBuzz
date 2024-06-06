@@ -13,12 +13,12 @@ export default function Footer() {
 
     const getButtonStyle = (screen: string) => [
         styles.footerButton,
-        activeButton === screen && styles.activeButton,
+        // activeButton === screen && styles.activeButton,
     ];
 
     const getImageStyle = (screen: string) => [
         styles.footerImage,
-        activeButton === screen && styles.activeImage,
+        // activeButton === screen && styles.activeImage,
     ];
 
     return (

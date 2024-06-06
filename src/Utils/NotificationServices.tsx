@@ -4,11 +4,6 @@ import { Alert } from 'react-native';
 import NavigationServices from '../Navigators/NavigationServices';
 
 
-interface Content {
-    body: string;
-    imageUrl?: string;
-}
-
 export async function requestUserPermission(): Promise<void> {
     try {
         const authStatus = await messaging().requestPermission();
@@ -17,7 +12,6 @@ export async function requestUserPermission(): Promise<void> {
             authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
         if (!enabled) {
-            // Handle the case where permission is not granted
             console.log('Permission not granted for FCM notifications.');
         } else {
             console.log('Authorization status:', authStatus);
@@ -37,6 +31,7 @@ const getFcmToken = async (): Promise<void> => {
         console.error('Error fetching FCM token:', error);
     }
 };
+
 const subscribeToTopic = async (topic: string): Promise<void> => {
     try {
         await messaging().subscribeToTopic(topic);
@@ -45,7 +40,8 @@ const subscribeToTopic = async (topic: string): Promise<void> => {
         console.error(`Error subscribing to topic ${topic}:`, error);
     }
 };
-export async function notificationListeners() {
+
+export async function notificationListeners(): Promise<void> {
     messaging().onMessage(async remoteMessage => {
         console.log('Received in foreground:', remoteMessage);
         displayNotification(remoteMessage);
@@ -53,30 +49,21 @@ export async function notificationListeners() {
     });
 
     messaging().onNotificationOpenedApp(remoteMessage => {
-        console.log(
-            'Notification caused app to open from background state:',
-            remoteMessage,
-        );
+        console.log('Notification caused app to open from background state:', remoteMessage);
         handleNavigation(remoteMessage);
     });
 
-    messaging()
-        .getInitialNotification()
-        .then(remoteMessage => {
-            if (remoteMessage) {
-                console.log(
-                    'Notification caused app to open from quit state:',
-                    remoteMessage.notification,
-                );
-                handleNavigation(remoteMessage);
-            }
-        });
+    messaging().getInitialNotification().then(remoteMessage => {
+        if (remoteMessage) {
+            console.log('Notification caused app to open from quit state:', remoteMessage.notification);
+            handleNavigation(remoteMessage);
+        }
+    });
 }
 
-const displayNotification = (remoteMessage: any) => {
+const displayNotification = (remoteMessage): void => {
     const { notification } = remoteMessage;
     if (notification && notification.title && notification.body) {
-        // Customize how the notification appears
         Alert.alert(
             notification.title,
             notification.body,
@@ -94,21 +81,18 @@ const displayNotification = (remoteMessage: any) => {
     }
 };
 
-const handleNavigation = (remoteMessage: any) => {
+const handleNavigation = (remoteMessage: any): void => {
     if (remoteMessage?.data && remoteMessage.data.redirect_to) {
-        const content: Content = {
-            body: remoteMessage.notification?.body || '',
-            imageUrl: remoteMessage.data.imageUrl || '',
-        };
+        const { redirect_to, postId } = remoteMessage.data;
 
         const user = auth().currentUser;
         console.log('Current user:', user);
         if (user) {
-            NavigationServices.navigate(remoteMessage.data.redirect_to, { content });
+            NavigationServices.navigate(redirect_to, { postId });
         } else {
-            NavigationServices.navigate('Login', {
-                screen: remoteMessage.data.redirect_to,
-                params: { content },
+            NavigationServices.navigate('LoginScreen', {
+                screen: redirect_to,
+                params: postId,
             });
         }
     }

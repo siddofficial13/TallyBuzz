@@ -3,6 +3,8 @@ import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const ProfileScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -72,6 +74,7 @@ const ProfileScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
+            <Header />
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.header}>Update Profile</Text>
@@ -110,6 +113,7 @@ const ProfileScreen: React.FC = () => {
                     <Text style={styles.websiteLink}>Visit our website</Text>
                 </TouchableOpacity>
             </ScrollView>
+            <Footer />
         </View>
     );
 };
