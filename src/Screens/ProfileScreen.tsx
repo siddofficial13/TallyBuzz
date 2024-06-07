@@ -1,31 +1,92 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    ScrollView,
+    TouchableOpacity,
+    Image,
+    Alert,
+    ActivityIndicator, // Import ActivityIndicator
+} from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+
+const sendNotification = async userId => {
+    try {
+        const userDoc = await firestore().collection('Users').doc(userId).get();
+        const userToken = userDoc.data()?.fcmToken;
+
+        if (userToken) {
+            fetch(
+                'https://tested-unwrap-curriculum-thereof.trycloudflare.com/send-notification-user-update-profile',
+                {
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        token: userToken,
+                        data: { redirect_to: 'ProfileScreen' },
+                    }),
+                },
+            );
+        } else {
+            console.error('User token not found');
+        }
+    } catch (error) {
+        console.error('Error fetching user token: ', error);
+    }
+};
 
 const ProfileScreen: React.FC = () => {
     const navigation = useNavigation();
     let [password, setPassword] = useState('');
     let [name, setName] = useState('');
+    const [isNotifyPressed, setIsNotifyPressed] = useState(false); // New state for Notify Me button
+    const [isLoading, setIsLoading] = useState(true); // New state for loading
+
+    useEffect(() => {
+        const checkNotifyStatus = async () => {
+            try {
+                const user = auth().currentUser;
+                if (user) {
+                    const notifyDoc = await firestore()
+                        .collection('Notify')
+                        .doc(user.uid)
+                        .get();
+                    setIsNotifyPressed(notifyDoc.exists);
+                }
+            } catch (error) {
+                console.error('Error checking notify status:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        checkNotifyStatus();
+    }, []);
 
     const handleUpdateProfile = async () => {
         try {
             const user = auth().currentUser;
             if (user) {
-                // Update password in Firebase Auth
-                const userDoc = await firestore().collection('Users').doc(user.uid).get();
-                const userName = userDoc.data()?.name
-                const userpass = userDoc.data()?.password
-                console.log(userName)
-                console.log(userpass)
+                const userDoc = await firestore()
+                    .collection('Users')
+                    .doc(user.uid)
+                    .get();
+                const userName = userDoc.data()?.name;
+                const userpass = userDoc.data()?.password;
+                console.log(userName);
+                console.log(userpass);
 
                 if (userName === name && userpass === password) {
-                    Alert.alert('Same name and password as previous')
-                }
-                else {
+                    Alert.alert('Same name and password as previous');
+                } else {
                     if (password) {
                         await user.updatePassword(password);
                         console.log('Password updated in Firebase Auth');
@@ -33,28 +94,53 @@ const ProfileScreen: React.FC = () => {
                             .collection('Users')
                             .doc(user.uid)
                             .update({ password });
-                        console.log('password updated in Firestore');
+                        console.log('Password updated in Firestore');
                     }
 
-                    // Update name in Firestore
                     if (name) {
-                        await firestore()
-                            .collection('Users')
-                            .doc(user.uid)
-                            .update({ name });
+                        await firestore().collection('Users').doc(user.uid).update({ name });
                         console.log('Name updated in Firestore');
                     }
                     console.log('Profile updated');
-                    Alert.alert('Profile Updated');
+                    sendNotification(user.uid);
                 }
             }
         } catch (error) {
-            console.error('Error updating profile:', error.message);
+            console.error('Error updating profile:', error);
         }
     };
 
-    const handleNotifyMe = () => {
-        console.log('Notify me button pressed');
+    const handleNotifyMe = async () => {
+        try {
+            const user = auth().currentUser;
+            if (user) {
+                const notifyDoc = await firestore()
+                    .collection('Notify')
+                    .doc(user.uid)
+                    .get();
+                if (!notifyDoc.exists) {
+                    const userDoc = await firestore()
+                        .collection('Users')
+                        .doc(user.uid)
+                        .get();
+                    const userToken = userDoc.data()?.fcmToken;
+
+                    if (userToken) {
+                        await firestore().collection('Notify').doc(user.uid).set({
+                            userId: user.uid,
+                            fcmToken: userToken,
+                        });
+                        setIsNotifyPressed(true);
+                    } else {
+                        console.error('FCM token not found for the user');
+                    }
+                } else {
+                    setIsNotifyPressed(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error handling notify me:', error);
+        }
     };
 
     const handleLogout = async () => {
@@ -65,10 +151,9 @@ const ProfileScreen: React.FC = () => {
             const currentUser = auth().currentUser;
             console.log('User after logout:', currentUser);
 
-            // Navigate to the login screen
             navigation.navigate('LoginScreen');
         } catch (error) {
-            console.error('Error logging out:', error.message);
+            console.error('Error logging out:', error);
         }
     };
 
@@ -79,7 +164,10 @@ const ProfileScreen: React.FC = () => {
                 <View style={styles.headerContainer}>
                     <Text style={styles.header}>Update Profile</Text>
                     <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                        <Image source={require('../assets/logout.png')} style={styles.logoutImage} />
+                        <Image
+                            source={require('../assets/logout.png')}
+                            style={styles.logoutImage}
+                        />
                     </TouchableOpacity>
                 </View>
                 <TextInput
@@ -89,7 +177,6 @@ const ProfileScreen: React.FC = () => {
                     value={name}
                     onChangeText={setName}
                 />
-
                 <TextInput
                     style={styles.input}
                     placeholder="Update Password"
@@ -102,11 +189,27 @@ const ProfileScreen: React.FC = () => {
                     <Text style={styles.buttonText}>Update Profile</Text>
                 </TouchableOpacity>
                 <View style={styles.notifySection}>
-                    <Text style={styles.lightAppText}>We are working on a lighter version of the app</Text>
-                    <Text style={styles.lightAppText}>Would you like to get notified when the app is ready to use</Text>
-                    <TouchableOpacity style={styles.notifyButton} onPress={handleNotifyMe}>
-                        <Text style={styles.buttonText}>Notify Me</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.lightAppText}>
+                        We are working on a lighter version of the app
+                    </Text>
+                    <Text style={styles.lightAppText}>
+                        Would you like to get notified when the app is ready to use
+                    </Text>
+                    {isLoading ? (
+                        <ActivityIndicator size="large" color="#000" />
+                    ) : (
+                        <TouchableOpacity
+                            style={[
+                                styles.notifyButton,
+                                isNotifyPressed && styles.notifyButtonPressed,
+                            ]}
+                            onPress={handleNotifyMe}
+                            disabled={isNotifyPressed}>
+                            <Text style={styles.buttonText}>
+                                {isNotifyPressed ? 'You will be notified soon' : 'Notify Me'}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
                 <Text style={styles.poweredByText}>Powered by Tally Solutions</Text>
                 <TouchableOpacity>
@@ -193,6 +296,9 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         alignItems: 'center',
         marginTop: 10,
+    },
+    notifyButtonPressed: {
+        backgroundColor: '#ccc', // Change button color when pressed
     },
     poweredByText: {
         textAlign: 'center',

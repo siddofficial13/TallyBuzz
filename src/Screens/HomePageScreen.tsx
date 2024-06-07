@@ -1,5 +1,15 @@
+//HomePageScreen.tsx
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment'; // Import moment for date formatting
@@ -8,11 +18,13 @@ import Footer from '../components/Footer';
 
 const { width } = Dimensions.get('window');
 
+
+
 interface Post {
   id: string;
   title: string;
   description: string;
-  imageUri: string;
+  imageUrl: string; // Changed from imageUri to imageUrl
   userId: string;
   likes: string[];
   createdAt: any; // Use any type to store Firestore timestamp
@@ -29,53 +41,68 @@ const HomePageScreen = () => {
     const unsubscribe = firestore()
       .collection('posts')
       .orderBy('createdAt', 'desc')
-      .onSnapshot(async (snapshot) => {
-        const postsList: Post[] = [];
-        for (const doc of snapshot.docs) {
-          const postData = doc.data();
-          const userDoc = await firestore().collection('Users').doc(postData.userId).get();
-          const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown'; // Fetch user name
+      .onSnapshot(
+        async snapshot => {
+          const postsList: Post[] = [];
+          for (const doc of snapshot.docs) {
+            const postData = doc.data();
+            const userDoc = await firestore()
+              .collection('Users')
+              .doc(postData.userId)
+              .get();
+            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown'; // Fetch user name
 
-          const likes = postData.likes || []; // Handle undefined likes
-          postsList.push({
-            id: doc.id,
-            title: postData.title,
-            description: postData.description,
-            imageUri: postData.imageUri,
-            userId: postData.userId,
-            likes: likes, // Initialize likes with empty array if undefined
-            createdAt: postData.createdAt, // Add createdAt field
-            userName: userName, // Add userName field
-          });
-        }
-        setPosts(postsList);
-        setLoading(false);
-      }, (error) => {
-        console.error('Error fetching posts:', error);
-        setLoading(false);
-      });
+            const likes = postData.likes || []; // Handle undefined likes
+            postsList.push({
+              id: doc.id,
+              title: postData.title,
+              description: postData.description,
+              imageUrl: postData.imageUrl, // Changed from imageUri to imageUrl
+              userId: postData.userId,
+              likes: likes, // Initialize likes with empty array if undefined
+              createdAt: postData.createdAt, // Add createdAt field
+              userName: userName, // Add userName field
+            });
+          }
+          setPosts(postsList);
+          setLoading(false);
+        },
+        error => {
+          console.error('Error fetching posts:', error);
+          setLoading(false);
+        },
+      );
 
     return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
-  const sendNoti2 = async (userId: string, likerName: string, postId: string) => {
+  const sendNoti2 = async (
+    userId: string,
+    likerName: string,
+    postId: string,
+    imageUrl: string // Add imageUrl as a parameter
+  ) => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
       const userToken = userDoc.data()?.fcmToken;
 
       if (userToken) {
-        fetch('https://dec-accordingly-admin-difference.trycloudflare.com/send-noti-user', {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
+        fetch(
+          'https://tested-unwrap-curriculum-thereof.trycloudflare.com/send-noti-user',
+          {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token: userToken,
+              title: 'New Like',
+              body: `${likerName} liked your post!`,
+              data: { redirect_to: 'PostScreen', postId: postId }, // Include imageUrl in the payload
+              imageUrl: imageUrl, // Add imageUrl here as well
+            }),
           },
-          body: JSON.stringify({
-            token: userToken,
-            title: 'New Like',
-            body: `${likerName} liked your post!`,
-            data: { redirect_to: 'PostScreen', postId: postId },
-          }),
-        });
+        );
       } else {
         console.error('User token not found');
       }
@@ -84,7 +111,8 @@ const HomePageScreen = () => {
     }
   };
 
-  const handleLike = async (postId: string) => {
+
+  const handleLike = async (postId: string, imageUrl: string) => {
     try {
       const postRef = firestore().collection('posts').doc(postId);
       const postDoc = await postRef.get();
@@ -99,15 +127,19 @@ const HomePageScreen = () => {
 
         setPosts(prevPosts =>
           prevPosts.map(post =>
-            post.id === postId ? { ...post, likes: updatedLikes } : post
-          )
+            post.id === postId ? { ...post, likes: updatedLikes } : post,
+          ),
         );
 
         // Send notification to the post owner
         if (!postData.likes.includes(userId)) {
-          const likerDoc = await firestore().collection('Users').doc(userId).get();
+          const likerDoc = await firestore()
+            .collection('Users')
+            .doc(userId)
+            .get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
-          sendNoti2(postData.userId, likerName, postId);
+          sendNoti2(postData.userId, likerName, postId, imageUrl);
+
         }
       }
     } catch (error) {
@@ -130,22 +162,28 @@ const HomePageScreen = () => {
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
             <Text style={styles.userName}>{post.userName}</Text>
-            {post.imageUri ? (
-              <Image source={{ uri: post.imageUri }} style={styles.postImage} />
+            {post.imageUrl ? (
+              <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
             ) : null}
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postDescription}>{post.description}</Text>
             <View style={styles.likeContainer}>
-              <TouchableOpacity onPress={() => handleLike(post.id)}>
+              <TouchableOpacity onPress={() => handleLike(post.id, post.imageUrl)}>
                 <Image
-                  source={post.likes.includes(userId) ? require('../assets/heartred.png') : require('../assets/heart.png')}
+                  source={
+                    post.likes.includes(userId)
+                      ? require('../assets/heartred.png')
+                      : require('../assets/heart.png')
+                  }
                   style={{ width: 24, height: 24 }}
                 />
               </TouchableOpacity>
               <Text style={styles.likeCount}>{post.likes.length}</Text>
             </View>
             <Text style={styles.postDate}>
-              {post.createdAt && post.createdAt.toDate ? moment(post.createdAt.toDate()).format('LLL') : 'Unknown date'}
+              {post.createdAt && post.createdAt.toDate
+                ? moment(post.createdAt.toDate()).format('LLL')
+                : 'Unknown date'}
             </Text>
           </View>
         ))}

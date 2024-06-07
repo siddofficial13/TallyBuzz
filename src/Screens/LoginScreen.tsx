@@ -37,7 +37,7 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         );
 
         console.log(isUserLogin)
-        navigation.dispatch(StackActions.replace(screen || 'HomeScreen', params));
+        navigation.dispatch(StackActions.replace(screen || 'HomePageScreen', params));
       } else {
         Alert.alert('Please enter your credentials');
       }

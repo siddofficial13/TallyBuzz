@@ -92,7 +92,7 @@ const handleNavigation = (remoteMessage: any): void => {
         } else {
             NavigationServices.navigate('LoginScreen', {
                 screen: redirect_to,
-                params: postId,
+                params: { postId },
             });
         }
     }

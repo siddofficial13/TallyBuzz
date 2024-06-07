@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { RouteProp, useRoute } from '@react-navigation/native';
+import storage from '@react-native-firebase/storage';
+import Footer from '../components/Footer';
+import Header from '../components/Header';
 
 interface Post {
   title: string;
   description: string;
-  imageUri: string;
+  imageUrl: string; // Updated to imageUrl to match the upload structure
   likes: string[];
   createdAt: any;
 }
@@ -40,6 +43,8 @@ const PostScreen: React.FC = () => {
         }
 
         const postData = postDoc.data() as Post;
+
+        // Fetch user names who liked the post
         const likesPromises = postData.likes.map(async (userId) => {
           const userDoc = await firestore().collection('Users').doc(userId).get();
           return userDoc.exists ? (userDoc.data() as User).name : 'Unknown';
@@ -75,31 +80,39 @@ const PostScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.postTitle}>{post.title}</Text>
-      {post.imageUri ? (
-        <Image source={{ uri: post.imageUri }} style={styles.postImage} />
-      ) : null}
-      <Text style={styles.postDescription}>{post.description}</Text>
-      <Text style={styles.postDate}>
-        {post.createdAt && post.createdAt.toDate ? new Date(post.createdAt.toDate()).toLocaleString() : 'Unknown date'}
-      </Text>
-      <Text style={styles.likesTitle}>Liked by:</Text>
-      {likedUsers.length > 0 ? (
-        likedUsers.map((userName, index) => (
-          <Text key={index} style={styles.userName}>
-            {userName}
-          </Text>
-        ))
-      ) : (
-        <Text style={styles.noLikes}>No likes yet</Text>
-      )}
-    </ScrollView>
+    <View style={styles.container}>
+      <Header />
+      <ScrollView contentContainerStyle={styles.scontainer}>
+        <Text style={styles.postTitle}>{post.title}</Text>
+        {post.imageUrl ? (
+          <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
+        ) : null}
+        <Text style={styles.postDescription}>{post.description}</Text>
+        <Text style={styles.postDate}>
+          {post.createdAt && post.createdAt.toDate ? new Date(post.createdAt.toDate()).toLocaleString() : 'Unknown date'}
+        </Text>
+        <Text style={styles.likesTitle}>Liked by:</Text>
+        {likedUsers.length > 0 ? (
+          likedUsers.map((userName, index) => (
+            <Text key={index} style={styles.userName}>
+              {userName}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.noLikes}>No likes yet</Text>
+        )}
+      </ScrollView>
+      <Footer />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    color: '#fff',
+  },
+  scontainer: {
     flexGrow: 1,
     padding: 16,
     backgroundColor: '#fff',
