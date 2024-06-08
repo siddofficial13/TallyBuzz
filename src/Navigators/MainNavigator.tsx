@@ -30,9 +30,28 @@ export type RootStackParamList = {
 const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: [
+    'https://indoor-paying-campaign-films.trycloudflare.com',
+    'tallybuzz://',
+  ],
+  config: {
+    screens: {
+      HomeScreen: 'home',
+      SignUpScreen: 'signup',
+      LoginScreen: 'login',
+      HomePageScreen: 'homepage',
+      UploadPost: 'uploadpost',
+      ProfileScreen: 'profile',
+      PostScreen: 'post/:postId',
+    },
+  },
+};
+
 const MainNavigator = () => {
   return (
     <NavigationContainer
+      linking={linking}
       ref={ref => NavigationServices.setTopLevelNavigator(ref)}>
       <Stack.Navigator>
         <Stack.Screen

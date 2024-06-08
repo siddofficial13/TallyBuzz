@@ -101,7 +101,7 @@ const UploadPost = () => {
             const userToken = doc.data().fcmToken;
             if (userToken) {
               fetch(
-                'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-broadcast',
+                'https://render-grab-jeff-josh.trycloudflare.com/send-broadcast',
                 {
                   method: 'POST',
                   headers: {

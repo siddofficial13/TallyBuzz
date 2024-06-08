@@ -22,8 +22,8 @@ const sendNotification = async userId => {
     const userToken = userDoc.data()?.fcmToken;
 
     if (userToken) {
-      fetch(
-        'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-notification-user-update-profile',
+      await fetch(
+        'https://render-grab-jeff-josh.trycloudflare.com/send-notification-user-update-profile',
         {
           method: 'post',
           headers: {
@@ -35,6 +35,11 @@ const sendNotification = async userId => {
           }),
         },
       );
+      // Update the Notify collection after sending the notification
+      await firestore()
+        .collection('Notify')
+        .doc(userId)
+        .update({fcmToken: null});
     } else {
       console.error('User token not found');
     }
@@ -49,17 +54,30 @@ const ProfileScreen: React.FC = () => {
   let [name, setName] = useState('');
   const [isNotifyPressed, setIsNotifyPressed] = useState(false); // New state for Notify Me button
   const [isLoading, setIsLoading] = useState(true); // New state for loading
+  const [notifyStatus, setNotifyStatus] = useState(null); // New state for notify status
 
   useEffect(() => {
     const checkNotifyStatus = async () => {
       try {
         const user = auth().currentUser;
         if (user) {
-          const notifyDoc = await firestore()
+          firestore()
             .collection('Notify')
             .doc(user.uid)
-            .get();
-          setIsNotifyPressed(notifyDoc.exists);
+            .onSnapshot(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                if (data?.fcmToken && data?.userId) {
+                  setNotifyStatus('notified');
+                } else if (data?.userId) {
+                  setNotifyStatus('viewFunctionality');
+                } else {
+                  setNotifyStatus(null);
+                }
+              } else {
+                setNotifyStatus(null);
+              }
+            });
         }
       } catch (error) {
         console.error('Error checking notify status:', error);
@@ -111,6 +129,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleNotifyMe = async () => {
+    setIsNotifyPressed(true); // Disable the button immediately after it's pressed
     try {
       const user = auth().currentUser;
       if (user) {
@@ -130,12 +149,9 @@ const ProfileScreen: React.FC = () => {
               userId: user.uid,
               fcmToken: userToken,
             });
-            setIsNotifyPressed(true);
           } else {
             console.error('FCM token not found for the user');
           }
-        } else {
-          setIsNotifyPressed(true);
         }
       }
     } catch (error) {
@@ -198,17 +214,36 @@ const ProfileScreen: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator size="large" color="#000" />
           ) : (
-            <TouchableOpacity
-              style={[
-                styles.notifyButton,
-                isNotifyPressed && styles.notifyButtonPressed,
-              ]}
-              onPress={handleNotifyMe}
-              disabled={isNotifyPressed}>
-              <Text style={styles.buttonText}>
-                {isNotifyPressed ? 'You will be notified soon' : 'Notify Me'}
-              </Text>
-            </TouchableOpacity>
+            <>
+              {notifyStatus === 'notified' ? (
+                <TouchableOpacity
+                  style={[
+                    styles.notifyButton,
+                    isNotifyPressed && styles.notifyButtonPressed,
+                  ]}
+                  disabled={true}>
+                  <Text style={styles.buttonText}>
+                    You will be notified soon
+                  </Text>
+                </TouchableOpacity>
+              ) : notifyStatus === 'viewFunctionality' ? (
+                <TouchableOpacity
+                  style={styles.viewFunctionalityButton}
+                  onPress={() => navigation.navigate('NotifyMeRedirectScreen')}>
+                  <Text style={styles.buttonText}>View New Functionality</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.notifyButton,
+                    isNotifyPressed && styles.notifyButtonPressed,
+                  ]}
+                  onPress={handleNotifyMe}
+                  disabled={isNotifyPressed}>
+                  <Text style={styles.buttonText}>Notify Me</Text>
+                </TouchableOpacity>
+              )}
+            </>
           )}
         </View>
         <Text style={styles.poweredByText}>Powered by Tally Solutions</Text>
@@ -299,6 +334,13 @@ const styles = StyleSheet.create({
   },
   notifyButtonPressed: {
     backgroundColor: '#ccc', // Change button color when pressed
+  },
+  viewFunctionalityButton: {
+    backgroundColor: '#000',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
   },
   poweredByText: {
     textAlign: 'center',

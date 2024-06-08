@@ -76,6 +76,7 @@ const HomePageScreen = () => {
     userId: string,
     likerName: string,
     postId: string,
+    imageUrl: string, // Add imageUrl as a parameter
   ) => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
@@ -83,7 +84,7 @@ const HomePageScreen = () => {
 
       if (userToken) {
         fetch(
-          'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-noti-user',
+          'https://render-grab-jeff-josh.trycloudflare.com/send-noti-user',
           {
             method: 'post',
             headers: {
@@ -93,7 +94,8 @@ const HomePageScreen = () => {
               token: userToken,
               title: 'New Like',
               body: `${likerName} liked your post!`,
-              data: {redirect_to: 'PostScreen', postId: postId},
+              data: {redirect_to: 'PostScreen', postId: postId}, // Include imageUrl in the payload
+              imageUrl: imageUrl, // Add imageUrl here as well
             }),
           },
         );
@@ -105,7 +107,7 @@ const HomePageScreen = () => {
     }
   };
 
-  const handleLike = async (postId: string) => {
+  const handleLike = async (postId: string, imageUrl: string) => {
     try {
       const postRef = firestore().collection('posts').doc(postId);
       const postDoc = await postRef.get();
@@ -131,7 +133,7 @@ const HomePageScreen = () => {
             .doc(userId)
             .get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
-          sendNoti2(postData.userId, likerName, postId);
+          sendNoti2(postData.userId, likerName, postId, imageUrl);
         }
       }
     } catch (error) {
@@ -160,7 +162,8 @@ const HomePageScreen = () => {
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postDescription}>{post.description}</Text>
             <View style={styles.likeContainer}>
-              <TouchableOpacity onPress={() => handleLike(post.id)}>
+              <TouchableOpacity
+                onPress={() => handleLike(post.id, post.imageUrl)}>
                 <Image
                   source={
                     post.likes.includes(userId)
