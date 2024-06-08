@@ -19,31 +19,35 @@ import Footer from '../components/Footer';
 const sendNotification = async userId => {
     try {
         const userDoc = await firestore().collection('Users').doc(userId).get();
-        const userToken = userDoc.data()?.fcmToken;
+        const userTokens = userDoc.data()?.fcmtoken;
 
-        if (userToken) {
-            await fetch(
-                'https://tested-unwrap-curriculum-thereof.trycloudflare.com/send-notification-user-update-profile',
-                {
-                    method: 'post',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        token: userToken,
-                        data: { redirect_to: 'ProfileScreen' },
-                    }),
-                },
-            );
-            // Update the Notify collection after sending the notification
-            await firestore().collection('Notify').doc(userId).update({ fcmToken: null });
+        if (userTokens && Array.isArray(userTokens)) {
+            await Promise.all(userTokens.map(async token => {
+                await fetch(
+                    'https://scripts-lakes-victory-challenging.trycloudflare.com/send-notification-user-update-profile',
+                    {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: token,
+                            data: { redirect_to: 'ProfileScreen' },
+                        }),
+                    }
+                );
+            }));
+
+            // Update the Notify collection after sending the notifications if needed
+            // await firestore().collection('Notify').doc(userId).update({ fcmToken: null });
         } else {
-            console.error('User token not found');
+            console.error('User tokens not found or not an array');
         }
     } catch (error) {
-        console.error('Error fetching user token: ', error);
+        console.error('Error fetching user tokens: ', error);
     }
 };
+
 
 const ProfileScreen: React.FC = () => {
     const navigation = useNavigation();

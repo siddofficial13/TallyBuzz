@@ -14,35 +14,50 @@ import {
 import React, { useState } from 'react';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
 import { StackActions } from '@react-navigation/native';
-
 
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 const LoginScreen = ({ navigation, route }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const navigation = useNavigation();
   const { screen, params } = route.params || {};
 
   const handleLogin = async () => {
     try {
       if (email.length > 0 && password.length > 0) {
-        // Perform login logic here...
-        const isUserLogin = await auth().signInWithEmailAndPassword(
-          email,
-          password,
-        );
+        const isUserLogin = await auth().signInWithEmailAndPassword(email, password);
 
-        console.log(isUserLogin)
+        const userId = isUserLogin.user.uid;
+        const fcmToken = await messaging().getToken();
+
+        // Fetch the user document
+        const userDoc = await firestore().collection('Users').doc(userId).get();
+
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          const fcmtokens = userData?.fcmtoken || [];
+
+          // Check if the current FCM token is already in the array
+          if (!fcmtokens.includes(fcmToken)) {
+            // Add the new FCM token to the array
+            fcmtokens.push(fcmToken);
+            await firestore().collection('Users').doc(userId).update({
+              fcmtoken: fcmtokens,
+            });
+          }
+        }
+
         navigation.dispatch(StackActions.replace(screen || 'HomePageScreen', params));
       } else {
         Alert.alert('Please enter your credentials');
       }
     } catch (error: any) {
       console.log(error);
+      Alert.alert('Login failed', error.message);
     }
   };
 

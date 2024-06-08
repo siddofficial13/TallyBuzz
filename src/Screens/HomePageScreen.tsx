@@ -1,5 +1,3 @@
-//HomePageScreen.tsx
-
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -15,10 +13,9 @@ import auth from '@react-native-firebase/auth';
 import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { StackActions, useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
-
-
 
 interface Post {
   id: string;
@@ -34,11 +31,12 @@ interface Post {
 const HomePageScreen = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   const userId = auth().currentUser?.uid;
 
   useEffect(() => {
-    const unsubscribe = firestore()
+    const unsubscribePosts = firestore()
       .collection('posts')
       .orderBy('createdAt', 'desc')
       .onSnapshot(
@@ -73,7 +71,24 @@ const HomePageScreen = () => {
         },
       );
 
-    return () => unsubscribe();
+    const unsubscribeUsers = firestore()
+      .collection('Users')
+      .onSnapshot(snapshot => {
+        setPosts(prevPosts =>
+          prevPosts.map(post => {
+            const userDoc = snapshot.docs.find(doc => doc.id === post.userId);
+            if (userDoc) {
+              return { ...post, userName: userDoc.data().name };
+            }
+            return post;
+          }),
+        );
+      });
+
+    return () => {
+      unsubscribePosts();
+      unsubscribeUsers();
+    };
   }, []);
 
   const sendNoti2 = async (
@@ -84,30 +99,29 @@ const HomePageScreen = () => {
   ) => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
-      const userToken = userDoc.data()?.fcmToken;
+      const userTokens = userDoc.data()?.fcmtoken;
 
-      if (userToken) {
-        fetch(
-          'https://tested-unwrap-curriculum-thereof.trycloudflare.com/send-noti-user',
-          {
+      if (userTokens && Array.isArray(userTokens)) {
+        userTokens.forEach(token => {
+          fetch('https://scripts-lakes-victory-challenging.trycloudflare.com/send-noti-user', {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              token: userToken,
+              token: token,
               title: 'New Like',
               body: `${likerName} liked your post!`,
               data: { redirect_to: 'PostScreen', postId: postId },
               imageUrl: imageUrl,
             }),
-          },
-        );
+          });
+        });
       } else {
-        console.error('User token not found');
+        console.error('User tokens not found or not an array');
       }
     } catch (error) {
-      console.error('Error fetching user token: ', error);
+      console.error('Error fetching user tokens: ', error);
     }
   };
 
@@ -139,7 +153,6 @@ const HomePageScreen = () => {
             .get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
           sendNoti2(postData?.userId, likerName, postId, imageUrl);
-
         }
       }
     } catch (error) {
@@ -162,9 +175,11 @@ const HomePageScreen = () => {
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
             <Text style={styles.userName}>{post.userName}</Text>
-            {post.imageUrl ? (
-              <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
-            ) : null}
+            <TouchableOpacity onPress={() => navigation.navigate('PostScreen', { postId: post.id })}>
+              {post.imageUrl ? (
+                <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
+              ) : null}
+            </TouchableOpacity>
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postDescription}>{post.description}</Text>
             <View style={styles.likeContainer}>
