@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import moment from 'moment'; // Import moment for date formatting
+import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -24,11 +24,11 @@ interface Post {
   id: string;
   title: string;
   description: string;
-  imageUrl: string; // Changed from imageUri to imageUrl
+  imageUrl: string;
   userId: string;
   likes: string[];
-  createdAt: any; // Use any type to store Firestore timestamp
-  userName: string; // Add userName to the interface
+  createdAt: any;
+  userName: string;
 }
 
 const HomePageScreen = () => {
@@ -50,18 +50,18 @@ const HomePageScreen = () => {
               .collection('Users')
               .doc(postData.userId)
               .get();
-            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown'; // Fetch user name
+            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
 
-            const likes = postData.likes || []; // Handle undefined likes
+            const likes = postData.likes || [];
             postsList.push({
               id: doc.id,
               title: postData.title,
               description: postData.description,
-              imageUrl: postData.imageUrl, // Changed from imageUri to imageUrl
+              imageUrl: postData.imageUrl,
               userId: postData.userId,
-              likes: likes, // Initialize likes with empty array if undefined
-              createdAt: postData.createdAt, // Add createdAt field
-              userName: userName, // Add userName field
+              likes: likes,
+              createdAt: postData.createdAt,
+              userName: userName,
             });
           }
           setPosts(postsList);
@@ -73,7 +73,7 @@ const HomePageScreen = () => {
         },
       );
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
   const sendNoti2 = async (
@@ -98,8 +98,8 @@ const HomePageScreen = () => {
               token: userToken,
               title: 'New Like',
               body: `${likerName} liked your post!`,
-              data: { redirect_to: 'PostScreen', postId: postId }, // Include imageUrl in the payload
-              imageUrl: imageUrl, // Add imageUrl here as well
+              data: { redirect_to: 'PostScreen', postId: postId },
+              imageUrl: imageUrl,
             }),
           },
         );
@@ -119,9 +119,9 @@ const HomePageScreen = () => {
 
       if (postDoc.exists) {
         const postData = postDoc.data();
-        const updatedLikes = postData.likes.includes(userId)
+        const updatedLikes = postData?.likes.includes(userId)
           ? postData.likes.filter((id: string) => id !== userId)
-          : [...postData.likes, userId];
+          : [...postData?.likes, userId];
 
         await postRef.update({ likes: updatedLikes });
 
@@ -132,13 +132,13 @@ const HomePageScreen = () => {
         );
 
         // Send notification to the post owner
-        if (!postData.likes.includes(userId)) {
+        if (!postData?.likes.includes(userId)) {
           const likerDoc = await firestore()
             .collection('Users')
             .doc(userId)
             .get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
-          sendNoti2(postData.userId, likerName, postId, imageUrl);
+          sendNoti2(postData?.userId, likerName, postId, imageUrl);
 
         }
       }
@@ -150,7 +150,7 @@ const HomePageScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text style={{ color: "#000" }}>Loading...</Text>
       </View>
     );
   }

@@ -45,7 +45,7 @@ export async function notificationListeners(): Promise<void> {
     messaging().onMessage(async remoteMessage => {
         console.log('Received in foreground:', remoteMessage);
         displayNotification(remoteMessage);
-        handleNavigation(remoteMessage);
+        // handleNavigation(remoteMessage);
     });
 
     messaging().onNotificationOpenedApp(remoteMessage => {
@@ -61,7 +61,7 @@ export async function notificationListeners(): Promise<void> {
     });
 }
 
-const displayNotification = (remoteMessage): void => {
+const displayNotification = (remoteMessage: any): void => {
     const { notification } = remoteMessage;
     if (notification && notification.title && notification.body) {
         Alert.alert(

@@ -50,7 +50,7 @@ const PostScreen: React.FC = () => {
           return userDoc.exists ? (userDoc.data() as User).name : 'Unknown';
         });
 
-        const likes = await Promise.all(likesPromises);
+        const likes = await Promise.all(likesPromises); //ensure that data is fetched asynchronously and handled properly before updating the component state.
         setPost(postData);
         setLikedUsers(likes);
       } catch (error) {
@@ -66,7 +66,7 @@ const PostScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text style={{ color: '#000' }}>Loading...</Text>
       </View>
     );
   }
