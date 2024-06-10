@@ -25,7 +25,7 @@ const sendNotification = async userId => {
       await Promise.all(
         userTokens.map(async token => {
           await fetch(
-            'https://earrings-taxation-successful-treating.trycloudflare.com/send-notification-user-update-profile',
+            'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-notification-user-update-profile',
             {
               method: 'post',
               headers: {

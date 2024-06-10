@@ -104,7 +104,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://earrings-taxation-successful-treating.trycloudflare.com/send-noti-user',
+            'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {

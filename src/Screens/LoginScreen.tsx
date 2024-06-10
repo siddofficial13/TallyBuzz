@@ -92,7 +92,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://earrings-taxation-successful-treating.trycloudflare.com/send-broadcast-multiple-login',
+                'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-broadcast-multiple-login',
                 {
                   method: 'POST',
                   headers: {

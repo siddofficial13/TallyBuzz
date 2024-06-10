@@ -52,7 +52,7 @@ const MultipleLoginRedirectScreen = () => {
       if (token !== null) {
         // Send notification to the current device (device Z)
         await fetch(
-          'https://earrings-taxation-successful-treating.trycloudflare.com/send-notification-unauthorised-login',
+          'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-notification-unauthorised-login',
           {
             method: 'POST',
             headers: {
@@ -66,6 +66,20 @@ const MultipleLoginRedirectScreen = () => {
             }),
           },
         );
+        const tokenCollectionRef = firestore().collection(
+          'multipleLoginfcmtoken',
+        );
+        // Query the collection to get existing tokens
+        const snapshot = await tokenCollectionRef.get();
+        // If there are existing tokens, delete them
+        if (!snapshot.empty) {
+          // Use batch to perform multiple operations atomically
+          const batch = firestore().batch();
+          snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+        }
       } else {
         console.log('No token found');
       }

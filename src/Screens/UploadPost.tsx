@@ -102,7 +102,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://earrings-taxation-successful-treating.trycloudflare.com/send-broadcast',
+                  'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {
