@@ -18,38 +18,48 @@ import firestore from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 
 const SignUpScreen = () => {
-  const saveData = async () => {
-    const userCredential = await auth().createUserWithEmailAndPassword(
-      email,
-      password,
-    );
-    const userId = userCredential.user.uid;
-    const token = await messaging().getToken();
-    firestore()
-      .collection('Users')
-      .doc(userId)
-      .set({
-        email: email,
-        password: password,
-        name: name,
-        fcmToken: token,
-      })
-      .then(() => {
-        console.log('User added successfully!!');
-        navigation.navigate('LoginScreen');
-      })
-      .catch(error => {
-        console.log('Error adding user: ', error);
-        Alert.alert(
-          'Error',
-          'There was an error adding the user. Please try again.',
-        );
-      });
-  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const navigation = useNavigation();
+
+  const saveData = async () => {
+    try {
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
+      const userId = userCredential.user.uid;
+      const token = await messaging().getToken();
+
+      firestore()
+        .collection('Users')
+        .doc(userId)
+        .set({
+          email: email,
+          password: password,
+          name: name,
+          fcmtoken: [token], // Store the FCM token in an array
+        })
+        .then(() => {
+          console.log('User added successfully!!');
+          navigation.navigate('LoginScreen');
+        })
+        .catch(error => {
+          console.log('Error adding user: ', error);
+          Alert.alert(
+            'Error',
+            'There was an error adding the user. Please try again.',
+          );
+        });
+    } catch (error) {
+      console.log('Error creating user: ', error);
+      Alert.alert(
+        'Error',
+        'There was an error creating the user. Please try again.',
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>

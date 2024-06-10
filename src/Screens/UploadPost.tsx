@@ -98,28 +98,29 @@ const UploadPost = () => {
           const userId = doc.id;
 
           if (userId !== user.uid) {
-            const userToken = doc.data().fcmToken;
-            if (userToken) {
-              fetch(
-                'https://render-grab-jeff-josh.trycloudflare.com/send-broadcast',
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
+            const userTokens = doc.data()?.fcmtoken;
+            if (userTokens && Array.isArray(userTokens)) {
+              userTokens.forEach(token => {
+                fetch(
+                  'https://earrings-taxation-successful-treating.trycloudflare.com/send-broadcast',
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      token: token,
+                      title: 'New Post Alert',
+                      body: `${userName} just uploaded a new post!`,
+                      data: {redirect_to: 'PostScreen', postId: postRef.id},
+                    }),
                   },
-                  body: JSON.stringify({
-                    token: userToken,
-                    title: 'New Post Alert',
-                    body: `${userName} just uploaded a new post!`,
-                    data: {redirect_to: 'PostScreen', postId: postRef.id},
-                  }),
-                },
-              );
+                );
+              });
             }
           }
         });
       };
-
       await sendNotificationToUsers();
 
       Alert.alert('Post uploaded successfully');
