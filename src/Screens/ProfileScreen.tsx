@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
+import { useUser } from '../context/UserContext';
 import {
     View,
     Text,
@@ -11,10 +12,8 @@ import {
     TouchableOpacity,
     Image,
     Alert,
-    ActivityIndicator, // Import ActivityIndicator
+    ActivityIndicator,
 } from 'react-native';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const sendNotification = async userId => {
     try {
@@ -22,24 +21,23 @@ const sendNotification = async userId => {
         const userTokens = userDoc.data()?.fcmtoken;
 
         if (userTokens && Array.isArray(userTokens)) {
-            await Promise.all(userTokens.map(async token => {
-                await fetch(
-                    'https://scripts-lakes-victory-challenging.trycloudflare.com/send-notification-user-update-profile',
-                    {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json',
+            await Promise.all(
+                userTokens.map(async token => {
+                    await fetch(
+                        `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-notification-user-update-profile`,
+                        {
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                token: token,
+                                data: { redirect_to: 'ProfileScreen', userId: userId },
+                            }),
                         },
-                        body: JSON.stringify({
-                            token: token,
-                            data: { redirect_to: 'ProfileScreen' },
-                        }),
-                    }
-                );
-            }));
-
-            // Update the Notify collection after sending the notifications if needed
-            // await firestore().collection('Notify').doc(userId).update({ fcmToken: null });
+                    );
+                }),
+            );
         } else {
             console.error('User tokens not found or not an array');
         }
@@ -48,16 +46,35 @@ const sendNotification = async userId => {
     }
 };
 
-
-const ProfileScreen: React.FC = () => {
+const ProfileScreen = () => {
     const navigation = useNavigation();
-    let [password, setPassword] = useState('');
-    let [name, setName] = useState('');
-    const [isNotifyPressed, setIsNotifyPressed] = useState(false); // New state for Notify Me button
-    const [isLoading, setIsLoading] = useState(true); // New state for loading
-    const [notifyStatus, setNotifyStatus] = useState(null); // New state for notify status
+    const { user, setUser, fetchUserData } = useUser();
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState(user.name);
+    const [email, setEmail] = useState('');
+    const [isNotifyPressed, setIsNotifyPressed] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [notifyStatus, setNotifyStatus] = useState(null);
 
     useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const user = auth().currentUser;
+                if (user) {
+                    const userDoc = await firestore().collection('Users').doc(user.uid).get();
+                    const userData = userDoc.data();
+                    if (userData) {
+                        setName(userData.name || '');
+                        setEmail(user.email || '');
+                        setPassword(userData.password || '');
+                    }
+
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
         const checkNotifyStatus = async () => {
             try {
                 const user = auth().currentUser;
@@ -68,7 +85,11 @@ const ProfileScreen: React.FC = () => {
                         .onSnapshot(doc => {
                             if (doc.exists) {
                                 const data = doc.data();
-                                if (data?.fcmToken && data?.userId) {
+                                if (
+                                    data?.fcmtoken &&
+                                    data?.fcmtoken.length > 0 &&
+                                    data?.userId
+                                ) {
                                     setNotifyStatus('notified');
                                 } else if (data?.userId) {
                                     setNotifyStatus('viewFunctionality');
@@ -87,6 +108,7 @@ const ProfileScreen: React.FC = () => {
             }
         };
 
+        fetchUserData();
         checkNotifyStatus();
     }, []);
 
@@ -99,26 +121,22 @@ const ProfileScreen: React.FC = () => {
                     .doc(user.uid)
                     .get();
                 const userName = userDoc.data()?.name;
-                const userpass = userDoc.data()?.password;
-                console.log(userName);
-                console.log(userpass);
+                const userPass = userDoc.data()?.password;
 
-                if (userName === name && userpass === password) {
+                if (userName === name && userPass === password) {
                     Alert.alert('Same name and password as previous');
                 } else {
                     if (password) {
                         await user.updatePassword(password);
-                        console.log('Password updated in Firebase Auth');
                         await firestore()
                             .collection('Users')
                             .doc(user.uid)
                             .update({ password });
-                        console.log('Password updated in Firestore');
                     }
 
                     if (name) {
                         await firestore().collection('Users').doc(user.uid).update({ name });
-                        console.log('Name updated in Firestore');
+                        setUser(prevState => ({ ...prevState, name }));
                     }
                     console.log('Profile updated');
                     sendNotification(user.uid);
@@ -130,7 +148,7 @@ const ProfileScreen: React.FC = () => {
     };
 
     const handleNotifyMe = async () => {
-        setIsNotifyPressed(true); // Disable the button immediately after it's pressed
+        setIsNotifyPressed(true);
         try {
             const user = auth().currentUser;
             if (user) {
@@ -143,15 +161,16 @@ const ProfileScreen: React.FC = () => {
                         .collection('Users')
                         .doc(user.uid)
                         .get();
-                    const userToken = userDoc.data()?.fcmToken;
+                    const userTokens = userDoc.data()?.fcmtoken;
 
-                    if (userToken) {
+                    if (userTokens && Array.isArray(userTokens)) {
                         await firestore().collection('Notify').doc(user.uid).set({
                             userId: user.uid,
-                            fcmToken: userToken,
+                            fcmtoken: userTokens,
                         });
+                        setNotifyStatus('notified');
                     } else {
-                        console.error('FCM token not found for the user');
+                        console.error('FCM tokens not found or not an array for the user');
                     }
                 }
             }
@@ -164,10 +183,8 @@ const ProfileScreen: React.FC = () => {
         try {
             await auth().signOut();
             console.log('Logged out');
-
             const currentUser = auth().currentUser;
             console.log('User after logout:', currentUser);
-
             navigation.navigate('LoginScreen');
         } catch (error) {
             console.error('Error logging out:', error);
@@ -176,8 +193,11 @@ const ProfileScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <Header />
             <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.userInfoContainer}>
+                    <Text style={styles.userInfo}>Name: {name}</Text>
+                    <Text style={styles.userInfo}>Email: {email}</Text>
+                </View>
                 <View style={styles.headerContainer}>
                     <Text style={styles.header}>Update Profile</Text>
                     <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -241,20 +261,13 @@ const ProfileScreen: React.FC = () => {
                                     ]}
                                     onPress={handleNotifyMe}
                                     disabled={isNotifyPressed}>
-                                    <Text style={styles.buttonText}>
-                                        Notify Me
-                                    </Text>
+                                    <Text style={styles.buttonText}>Notify Me</Text>
                                 </TouchableOpacity>
                             )}
                         </>
                     )}
                 </View>
-                <Text style={styles.poweredByText}>Powered by Tally Solutions</Text>
-                <TouchableOpacity>
-                    <Text style={styles.websiteLink}>Visit our website</Text>
-                </TouchableOpacity>
             </ScrollView>
-            <Footer />
         </View>
     );
 };
@@ -267,6 +280,14 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         padding: 20,
+    },
+    userInfoContainer: {
+        marginBottom: 20,
+    },
+    userInfo: {
+        fontSize: 18,
+        color: '#000',
+        marginBottom: 10,
     },
     headerContainer: {
         flexDirection: 'row',
@@ -336,7 +357,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     notifyButtonPressed: {
-        backgroundColor: '#ccc', // Change button color when pressed
+        backgroundColor: '#ccc',
     },
     viewFunctionalityButton: {
         backgroundColor: '#000',
@@ -344,16 +365,6 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         alignItems: 'center',
         marginTop: 10,
-    },
-    poweredByText: {
-        textAlign: 'center',
-        color: '#000',
-        marginVertical: 10,
-    },
-    websiteLink: {
-        textAlign: 'center',
-        color: '#000',
-        textDecorationLine: 'underline',
     },
 });
 

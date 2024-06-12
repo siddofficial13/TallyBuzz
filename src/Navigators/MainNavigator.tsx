@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   NavigationContainer,
   NavigationContainerRef,
+  useNavigationContainerRef,
 } from '@react-navigation/native';
 import HomeScreen from '../Screens/HomeScreen';
 import LoginScreen from '../Screens/LoginScreen';
@@ -15,6 +16,12 @@ import PostScreen from '../Screens/PostScreen';
 import NavigationServices from './NavigationServices'; // Adjust the path as needed
 import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
+import MultipleLoginRedirectScreen from '../Screens/MultipleLoginRedirectScreen';
+import UnauthorisedLoginRedirectScreen from '../Screens/UnauthorisedLoginRedirectScreen';
+import NotificationPage from '../Screens/NotificationPage';
+import Footer from '../components/Footer';
+import Header from '../components/Header';
+import { UserProvider } from '../context/UserContext';
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -26,12 +33,16 @@ export type RootStackParamList = {
   PostScreen: { postId: any };
   SplashScreen: undefined;
   NotifyMeRedirectScreen: undefined;
+  MultipleLoginRedirectScreen: undefined;
+  UnauthorisedLoginRedirectScreen: undefined;
+  NotificationPage: undefined,
 };
+
 const { width } = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
-  prefixes: ['https://tested-unwrap-curriculum-thereof.trycloudflare.com', 'tallybuzz://'],
+  prefixes: ['https://tune-earthquake-caroline-fantasy.trycloudflare.com', 'tallybuzz://'],
   config: {
     screens: {
       HomeScreen: 'home',
@@ -46,57 +57,101 @@ const linking = {
 };
 
 const MainNavigator = () => {
+  const navigationRef = useNavigationContainerRef();
+  const [currentRoute, setCurrentRoute] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const getCurrentRouteName = () => {
+      const route = navigationRef.getCurrentRoute();
+      setCurrentRoute(route?.name);
+    };
+
+    // Get the initial route
+    getCurrentRouteName();
+
+    // Subscribe to future route changes
+    const unsubscribe = navigationRef.addListener('state', getCurrentRouteName);
+
+    return () => unsubscribe();
+  }, [navigationRef]);
+
+  const showHeaderFooter = ['HomePageScreen', 'UploadPost', 'ProfileScreen', 'PostScreen', 'NotificationPage'].includes(currentRoute);
+
   return (
-    <NavigationContainer linking={linking}
-      ref={ref => NavigationServices.setTopLevelNavigator(ref)}>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="SplashScreen"
-          component={SplashScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="NotifyMeRedirectScreen"
-          component={NotifyMeRedirectScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="HomeScreen"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="LoginScreen"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="SignUpScreen"
-          component={SignUpScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="HomePageScreen"
-          component={HomePageScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="UploadPost"
-          component={UploadPost}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ProfileScreen"
-          component={ProfileScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PostScreen"
-          component={PostScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <UserProvider>
+      <NavigationContainer
+        linking={linking}
+        ref={ref => {
+          NavigationServices.setTopLevelNavigator(ref);
+          if (ref) navigationRef.current = ref;
+        }}
+      >
+        {showHeaderFooter && <Header />}
+        <Stack.Navigator>
+          <Stack.Screen
+            name="SplashScreen"
+            component={SplashScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NotifyMeRedirectScreen"
+            component={NotifyMeRedirectScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="HomeScreen"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="LoginScreen"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SignUpScreen"
+            component={SignUpScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="HomePageScreen"
+            component={HomePageScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UploadPost"
+            component={UploadPost}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProfileScreen"
+            component={ProfileScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PostScreen"
+            component={PostScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MultipleLoginRedirectScreen"
+            component={MultipleLoginRedirectScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UnauthorisedLoginRedirectScreen"
+            component={UnauthorisedLoginRedirectScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NotificationPage"
+            component={NotificationPage}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+        {showHeaderFooter && <Footer />}
+      </NavigationContainer>
+    </UserProvider>
   );
 };
 

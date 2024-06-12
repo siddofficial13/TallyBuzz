@@ -3,8 +3,6 @@ import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import storage from '@react-native-firebase/storage';
-import Footer from '../components/Footer';
-import Header from '../components/Header';
 
 interface Post {
   title: string;
@@ -81,7 +79,7 @@ const PostScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      {/* <Header /> */}
       <ScrollView contentContainerStyle={styles.scontainer}>
         <Text style={styles.postTitle}>{post.title}</Text>
         {post.imageUrl ? (
@@ -102,7 +100,7 @@ const PostScreen: React.FC = () => {
           <Text style={styles.noLikes}>No likes yet</Text>
         )}
       </ScrollView>
-      <Footer />
+      {/* <Footer /> */}
     </View>
   );
 };

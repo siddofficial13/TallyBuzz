@@ -95,7 +95,7 @@ const HomePageScreen = () => {
     userId: string,
     likerName: string,
     postId: string,
-    imageUrl: string // Add imageUrl as a parameter
+    imageUrl: string, // Add imageUrl as a parameter
   ) => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
@@ -103,19 +103,22 @@ const HomePageScreen = () => {
 
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
-          fetch('https://scripts-lakes-victory-challenging.trycloudflare.com/send-noti-user', {
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json',
+          fetch(
+            `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-noti-user`,
+            {
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token: token,
+                title: 'New Like',
+                body: `${likerName} liked your post!`,
+                data: { redirect_to: 'PostScreen', postId: postId, userId: userId },
+                imageUrl: imageUrl,
+              }),
             },
-            body: JSON.stringify({
-              token: token,
-              title: 'New Like',
-              body: `${likerName} liked your post!`,
-              data: { redirect_to: 'PostScreen', postId: postId },
-              imageUrl: imageUrl,
-            }),
-          });
+          );
         });
       } else {
         console.error('User tokens not found or not an array');
@@ -124,7 +127,6 @@ const HomePageScreen = () => {
       console.error('Error fetching user tokens: ', error);
     }
   };
-
 
   const handleLike = async (postId: string, imageUrl: string) => {
     try {
@@ -163,19 +165,22 @@ const HomePageScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={{ color: "#000" }}>Loading...</Text>
+        <Text style={{ color: '#000' }}>Loading...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Header />
+      {/* <Header /> */}
       <ScrollView contentContainerStyle={styles.mainContent}>
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
             <Text style={styles.userName}>{post.userName}</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('PostScreen', { postId: post.id })}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('PostScreen', { postId: post.id })
+              }>
               {post.imageUrl ? (
                 <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
               ) : null}
@@ -183,7 +188,8 @@ const HomePageScreen = () => {
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postDescription}>{post.description}</Text>
             <View style={styles.likeContainer}>
-              <TouchableOpacity onPress={() => handleLike(post.id, post.imageUrl)}>
+              <TouchableOpacity
+                onPress={() => handleLike(post.id, post.imageUrl)}>
                 <Image
                   source={
                     post.likes.includes(userId)
@@ -203,7 +209,7 @@ const HomePageScreen = () => {
           </View>
         ))}
       </ScrollView>
-      <Footer />
+      {/* <Footer /> */}
     </View>
   );
 };

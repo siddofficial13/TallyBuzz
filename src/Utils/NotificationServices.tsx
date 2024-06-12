@@ -44,12 +44,25 @@ const subscribeToTopic = async (topic: string): Promise<void> => {
 export async function notificationListeners(): Promise<void> {
     messaging().onMessage(async remoteMessage => {
         console.log('Received in foreground:', remoteMessage);
+        const currentUser = auth().currentUser;
+
+        if (currentUser?.uid && remoteMessage.data?.userId && remoteMessage.data.userId !== currentUser.uid) {
+            console.log('Notification userId does not match current user. Notification will not be displayed.');
+            return;
+        }
         displayNotification(remoteMessage);
         // handleNavigation(remoteMessage);
     });
 
     messaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Notification caused app to open from background state:', remoteMessage);
+        const currentUser = auth().currentUser;
+
+        if (currentUser?.uid && remoteMessage.data?.userId && remoteMessage.data.userId !== currentUser.uid) {
+            console.log('Notification userId does not match current user. Notification will not be displayed.');
+            NavigationServices.navigate('UnauthorisedLoginRedirectScreen');
+            return;
+        }
         handleNavigation(remoteMessage);
     });
 
@@ -83,7 +96,7 @@ const displayNotification = (remoteMessage: any): void => {
 
 const handleNavigation = (remoteMessage: any): void => {
     if (remoteMessage?.data && remoteMessage.data.redirect_to) {
-        const { redirect_to, postId } = remoteMessage.data;
+        const { redirect_to, postId, userId } = remoteMessage.data;
 
         const user = auth().currentUser;
         console.log('Current user:', user);

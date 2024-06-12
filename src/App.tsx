@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
-
 import React, { Component, useEffect } from 'react';
 import { View, Text, StyleSheet, PermissionsAndroid, Platform, Alert } from 'react-native';
 import MainNavigator from './Navigators/MainNavigator';

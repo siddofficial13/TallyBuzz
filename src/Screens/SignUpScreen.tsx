@@ -25,7 +25,10 @@ const SignUpScreen = () => {
 
   const saveData = async () => {
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
       const userId = userCredential.user.uid;
       const token = await messaging().getToken();
 

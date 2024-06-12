@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
+    Alert,
+    ScrollView,
+    Dimensions,
+    ActivityIndicator,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
@@ -38,7 +49,7 @@ const UploadPost = () => {
             quality: 1,
         };
 
-        launchImageLibrary(options, (response) => {
+        launchImageLibrary(options, response => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
             } else if (response.errorCode) {
@@ -74,39 +85,42 @@ const UploadPost = () => {
                 imageUrl,
                 userId: user.uid,
                 createdAt: firestore.FieldValue.serverTimestamp(),
-                likes: []
+                likes: [],
             });
 
             const userDoc = await firestore().collection('Users').doc(user.uid).get();
-            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
+            const userName = userDoc.exists ? userDoc.data()?.name : 'TallyBuzz_User';
 
             // Send notifications to all users except the one who posted
             const sendNotificationToUsers = async () => {
                 const usersSnapshot = await firestore().collection('Users').get();
-                usersSnapshot.forEach((doc) => {
+                usersSnapshot.forEach(doc => {
                     const userId = doc.id;
 
                     if (userId !== user.uid) {
                         const userTokens = doc.data()?.fcmtoken;
                         if (userTokens && Array.isArray(userTokens)) {
                             userTokens.forEach(token => {
-                                fetch('https://scripts-lakes-victory-challenging.trycloudflare.com/send-broadcast', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
+                                fetch(
+                                    `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-broadcast`,
+                                    {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            token: token,
+                                            title: 'New Post Alert',
+                                            body: `${userName} just uploaded a new post!`,
+                                            data: { redirect_to: 'PostScreen', postId: postRef.id, userId: userId },
+                                        }),
                                     },
-                                    body: JSON.stringify({
-                                        token: token,
-                                        title: 'New Post Alert',
-                                        body: `${userName} just uploaded a new post!`,
-                                        data: { redirect_to: 'PostScreen', postId: postRef.id },
-                                    }),
-                                });
-                            })
+                                );
+                            });
                         }
-                    };
+                    }
                 });
-            }
+            };
             await sendNotificationToUsers();
 
             Alert.alert('Post uploaded successfully');
@@ -123,31 +137,37 @@ const UploadPost = () => {
         const unsubscribe = firestore()
             .collection('posts')
             .orderBy('createdAt', 'desc')
-            .onSnapshot(async (snapshot) => {
-                const postsList: Post[] = [];
-                for (const doc of snapshot.docs) {
-                    const postData = doc.data();
-                    const userDoc = await firestore().collection('Users').doc(postData.userId).get();
-                    const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
+            .onSnapshot(
+                async snapshot => {
+                    const postsList: Post[] = [];
+                    for (const doc of snapshot.docs) {
+                        const postData = doc.data();
+                        const userDoc = await firestore()
+                            .collection('Users')
+                            .doc(postData.userId)
+                            .get();
+                        const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
 
-                    const likes = postData.likes || [];
-                    postsList.push({
-                        id: doc.id,
-                        title: postData.title,
-                        description: postData.description,
-                        imageUrl: postData.imageUrl,
-                        userId: postData.userId,
-                        likes: likes,
-                        createdAt: postData.createdAt,
-                        userName: userName,
-                    });
-                }
-                setPosts(postsList);
-                setLoading(false);
-            }, (error) => {
-                console.error('Error fetching posts:', error);
-                setLoading(false);
-            });
+                        const likes = postData.likes || [];
+                        postsList.push({
+                            id: doc.id,
+                            title: postData.title,
+                            description: postData.description,
+                            imageUrl: postData.imageUrl,
+                            userId: postData.userId,
+                            likes: likes,
+                            createdAt: postData.createdAt,
+                            userName: userName,
+                        });
+                    }
+                    setPosts(postsList);
+                    setLoading(false);
+                },
+                error => {
+                    console.error('Error fetching posts:', error);
+                    setLoading(false);
+                },
+            );
 
         return () => unsubscribe();
     }, []);
@@ -162,7 +182,7 @@ const UploadPost = () => {
 
     return (
         <View style={styles.container}>
-            <Header />
+            {/* <Header /> */}
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Text style={styles.header}>Upload Post</Text>
                 <TextInput
@@ -180,7 +200,9 @@ const UploadPost = () => {
                     onChangeText={setDescription}
                     multiline
                 />
-                <TouchableOpacity style={styles.imagePicker} onPress={handleChooseImage}>
+                <TouchableOpacity
+                    style={styles.imagePicker}
+                    onPress={handleChooseImage}>
                     {imageUri ? (
                         <Image source={{ uri: imageUri }} style={styles.image} />
                     ) : (
@@ -191,7 +213,7 @@ const UploadPost = () => {
                     <Text style={styles.buttonText}>Submit Post</Text>
                 </TouchableOpacity>
             </ScrollView>
-            <Footer />
+            {/* <Footer /> */}
         </View>
     );
 };
