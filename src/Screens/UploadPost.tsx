@@ -18,7 +18,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+import {API_BASE_URL} from '@env';
 const {width} = Dimensions.get('window');
 
 interface Post {
@@ -102,7 +102,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-broadcast',
+                  'https://select-ireland-refinance-porsche.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {
@@ -120,6 +120,7 @@ const UploadPost = () => {
             }
           }
         });
+        console.log('API_BASE_URL:', API_BASE_URL);
       };
       await sendNotificationToUsers();
 

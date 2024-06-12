@@ -14,7 +14,7 @@ import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {StackActions, useNavigation} from '@react-navigation/native';
-
+import {API_BASE_URL} from '@env';
 const {width} = Dimensions.get('window');
 
 interface Post {
@@ -104,7 +104,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-noti-user',
+            'https://select-ireland-refinance-porsche.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {
@@ -120,6 +120,8 @@ const HomePageScreen = () => {
             },
           );
         });
+
+        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.error('User tokens not found or not an array');
       }

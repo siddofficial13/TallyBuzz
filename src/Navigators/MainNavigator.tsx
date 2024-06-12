@@ -17,6 +17,7 @@ import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
 import MultipleLoginRedirectScreen from '../Screens/MultipleLoginRedirectScreen';
 import UnauthorisedLoginRedirectScreen from '../Screens/UnauthorisedLoginRedirectScreen';
+import LoadingScreen from '../Screens/LoadingScreen';
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -30,6 +31,7 @@ export type RootStackParamList = {
   NotifyMeRedirectScreen: undefined;
   MultipleLoginRedirectScreen: undefined;
   UnauthorisedLoginRedirectScreen: undefined;
+  LoadingScreen: undefined;
 };
 const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,6 +73,11 @@ const MainNavigator = () => {
         <Stack.Screen
           name="MultipleLoginRedirectScreen"
           component={MultipleLoginRedirectScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="LoadingScreen"
+          component={LoadingScreen}
           options={{headerShown: false}}
         />
         <Stack.Screen

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+import {API_BASE_URL} from '@env';
 const sendNotification = async userId => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
@@ -25,7 +25,7 @@ const sendNotification = async userId => {
       await Promise.all(
         userTokens.map(async token => {
           await fetch(
-            'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-notification-user-update-profile',
+            'https://select-ireland-refinance-porsche.trycloudflare.com/send-notification-user-update-profile',
             {
               method: 'post',
               headers: {
@@ -39,6 +39,7 @@ const sendNotification = async userId => {
           );
         }),
       );
+      console.log('API_BASE_URL:', API_BASE_URL);
     } else {
       console.error('User tokens not found or not an array');
     }

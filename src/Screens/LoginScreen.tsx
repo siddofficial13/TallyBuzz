@@ -19,7 +19,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../Navigators/MainNavigator';
 import {StackActions} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {API_BASE_URL} from '@env';
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 // Function to store a token
@@ -70,6 +70,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         // Fetch the user document
         const userDoc = await firestore().collection('Users').doc(userId).get();
         let tokensToNotify: string[] = [];
+        let fcm_token_array: string[] = [];
         if (userDoc.exists) {
           const userData = userDoc.data();
           const fcmtokens = userData?.fcmtoken || [];
@@ -87,12 +88,13 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
               fcmtoken: fcmtokens,
             });
           }
+          fcm_token_array = fcmtokens;
         }
         const sendNotificationMultipleLogin = async () => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-broadcast-multiple-login',
+                'https://select-ireland-refinance-porsche.trycloudflare.com/send-broadcast-multiple-login',
                 {
                   method: 'POST',
                   headers: {
@@ -108,13 +110,19 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
               );
             });
           }
+          console.log('API_BASE_URL:', API_BASE_URL);
         };
-
-        await sendNotificationMultipleLogin();
-
-        navigation.dispatch(
-          StackActions.replace(screen || 'HomePageScreen', params),
-        );
+        console.log(fcm_token_array.length);
+        if (fcm_token_array.length === 1) {
+          navigation.dispatch(
+            StackActions.replace(screen || 'HomePageScreen', params),
+          );
+        } else {
+          await sendNotificationMultipleLogin();
+          navigation.dispatch(
+            StackActions.replace(screen || 'LoadingScreen', params),
+          );
+        }
       } else {
         Alert.alert('Please enter your credentials');
       }

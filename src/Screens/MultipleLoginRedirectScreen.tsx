@@ -7,6 +7,7 @@ import {useNavigation} from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
+import {API_BASE_URL} from '@env';
 const fetchToken = async () => {
   try {
     // Get a reference to the 'multipleLoginfcmtoken' collection
@@ -42,7 +43,55 @@ const fetchToken = async () => {
 };
 const MultipleLoginRedirectScreen = () => {
   const navigation = useNavigation();
+  const handleLogin = async () => {
+    try {
+      // Fetch the token
+      const token = await fetchToken();
 
+      // Check if token is not null
+      if (token !== null) {
+        // Send notification to the current device (device Z)
+        await fetch(
+          'https://select-ireland-refinance-porsche.trycloudflare.com/send-notification-authorised-login',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token: token,
+              title: 'Authorized Login',
+              body: 'You are authorized to login from this device',
+              data: 'HomePageScreen',
+            }),
+          },
+        );
+        // const tokenCollectionRef = firestore().collection(
+        //   'multipleLoginfcmtoken',
+        // );
+        // // Query the collection to get existing tokens
+        // const snapshot = await tokenCollectionRef.get();
+        // // If there are existing tokens, delete them
+        // if (!snapshot.empty) {
+        //   // Use batch to perform multiple operations atomically
+        //   const batch = firestore().batch();
+        //   snapshot.docs.forEach(doc => {
+        //     batch.delete(doc.ref);
+        //   });
+        //   await batch.commit();
+        // }
+        console.log('API_BASE_URL:', API_BASE_URL);
+      } else {
+        console.log('No token found');
+      }
+
+      // Navigate to HomePageScreen after sending the notification
+      navigation.navigate('HomePageScreen');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Logout failed', 'An error occurred while logging out.');
+    }
+  };
   const handleLogout = async () => {
     try {
       // Fetch the token
@@ -52,7 +101,7 @@ const MultipleLoginRedirectScreen = () => {
       if (token !== null) {
         // Send notification to the current device (device Z)
         await fetch(
-          'https://veterinary-reveal-footwear-outsourcing.trycloudflare.com/send-notification-unauthorised-login',
+          'https://select-ireland-refinance-porsche.trycloudflare.com/send-notification-unauthorised-login',
           {
             method: 'POST',
             headers: {
@@ -80,6 +129,7 @@ const MultipleLoginRedirectScreen = () => {
           });
           await batch.commit();
         }
+        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.log('No token found');
       }
@@ -98,9 +148,7 @@ const MultipleLoginRedirectScreen = () => {
         You logged in from another device. If it was not you, kindly logout.
       </Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('HomePageScreen')}>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Yes It was me.</Text>
         </TouchableOpacity>
         <TouchableOpacity
