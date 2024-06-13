@@ -38,7 +38,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
   prefixes: [
-    'https://surgeon-next-symantec-tops.trycloudflare.com',
+    'https://tallybuzz.dynalinks.app/',
     'tallybuzz://',
   ],
   config: {

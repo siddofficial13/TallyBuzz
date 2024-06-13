@@ -1,4 +1,3 @@
-// NotificationServices.tsx
 import notifee, { AndroidImportance, EventType, AndroidStyle } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 import auth from '@react-native-firebase/auth';
@@ -66,17 +65,19 @@ const displayNotification = async (message: any): Promise<void> => {
     body: notification.body,
     android: {
       channelId: 'default',
-      smallIcon: 'ic_launcher', // Your app icon
+      smallIcon: 'ic_launcher',
       largeIcon: data.imageUrl,
       pressAction: {
         id: 'default',
       },
-      group: 'social',
-      groupSummary: false,
-      style: {
-        type: AndroidStyle.INBOX,
-        lines: [`${notification.title}: ${notification.body}`],
-      },
+      group: 'postUpdates',
+      groupSummary: notification.groupSummary || false,
+      style: notification.groupSummary
+        ? undefined
+        : {
+            type: AndroidStyle.INBOX,
+            lines: [`${notification.title}: ${notification.body}`],
+          },
       actions: [
         {
           title: 'View',
@@ -186,9 +187,10 @@ const displayGroupSummaryNotification = async (): Promise<void> => {
     body: 'Open the app to view them',
     android: {
       channelId: 'default',
-      smallIcon: 'ic_launcher',
-      group: 'social',
+      group: 'postUpdates',
+      groupAlertBehavior: 'children',
       groupSummary: true,
+      importance: AndroidImportance.HIGH,
     },
   });
-};
+}
