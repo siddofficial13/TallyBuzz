@@ -24,6 +24,6 @@
         <data android:host="tallybuzz.dynalinks.app" />
       </intent-filter>
       
-    </activity>
+    </activity> 
   </application>
 </manifest>
