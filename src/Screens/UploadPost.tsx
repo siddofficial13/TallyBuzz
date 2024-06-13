@@ -1,3 +1,5 @@
+//UploadPost.tsx
+
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -18,7 +20,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+// import {API_BASE_URL} from '@env';
 const {width} = Dimensions.get('window');
 
 interface Post {
@@ -98,28 +100,30 @@ const UploadPost = () => {
           const userId = doc.id;
 
           if (userId !== user.uid) {
-            const userToken = doc.data().fcmToken;
-            if (userToken) {
-              fetch(
-                'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-broadcast',
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
+            const userTokens = doc.data()?.fcmtoken;
+            if (userTokens && Array.isArray(userTokens)) {
+              userTokens.forEach(token => {
+                fetch(
+                  'https://argentina-zum-ks-ny.trycloudflare.com/send-broadcast',
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      token: token,
+                      title: 'New Post Alert',
+                      body: `${userName} just uploaded a new post!`,
+                      data: {redirect_to: 'PostScreen', postId: postRef.id},
+                    }),
                   },
-                  body: JSON.stringify({
-                    token: userToken,
-                    title: 'New Post Alert',
-                    body: `${userName} just uploaded a new post!`,
-                    data: {redirect_to: 'PostScreen', postId: postRef.id},
-                  }),
-                },
-              );
+                );
+              });
             }
           }
         });
+        // console.log('API_BASE_URL:', API_BASE_URL);
       };
-
       await sendNotificationToUsers();
 
       Alert.alert('Post uploaded successfully');

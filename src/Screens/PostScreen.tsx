@@ -3,6 +3,8 @@ import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import storage from '@react-native-firebase/storage';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 interface Post {
   title: string;
@@ -81,36 +83,44 @@ const PostScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.postTitle}>{post.title}</Text>
-      {post.imageUrl ? (
-        <Image source={{uri: post.imageUrl}} style={styles.postImage} />
-      ) : null}
-      <Text style={styles.postDescription}>{post.description}</Text>
-      <Text style={styles.postDate}>
-        {post.createdAt && post.createdAt.toDate
-          ? new Date(post.createdAt.toDate()).toLocaleString()
-          : 'Unknown date'}
-      </Text>
-      <Text style={styles.likesTitle}>Liked by:</Text>
-      {likedUsers.length > 0 ? (
-        likedUsers.map((userName, index) => (
-          <Text key={index} style={styles.userName}>
-            {userName}
-          </Text>
-        ))
-      ) : (
-        <Text style={styles.noLikes}>No likes yet</Text>
-      )}
-    </ScrollView>
+    <View style={styles.container}>
+      <Header />
+      <ScrollView contentContainerStyle={styles.scontainer}>
+        <Text style={styles.postTitle}>{post.title}</Text>
+        {post.imageUrl ? (
+          <Image source={{uri: post.imageUrl}} style={styles.postImage} />
+        ) : null}
+        <Text style={styles.postDescription}>{post.description}</Text>
+        <Text style={styles.postDate}>
+          {post.createdAt && post.createdAt.toDate
+            ? new Date(post.createdAt.toDate()).toLocaleString()
+            : 'Unknown date'}
+        </Text>
+        <Text style={styles.likesTitle}>Liked by:</Text>
+        {likedUsers.length > 0 ? (
+          likedUsers.map((userName, index) => (
+            <Text key={index} style={styles.userName}>
+              {userName}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.noLikes}>No likes yet</Text>
+        )}
+      </ScrollView>
+      <Footer />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scontainer: {
     flexGrow: 1,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  container: {
+    flex: 1,
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,

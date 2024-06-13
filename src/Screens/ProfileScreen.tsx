@@ -11,55 +11,77 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  ActivityIndicator, // Import ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+// import {API_BASE_URL} from '@env';
 const sendNotification = async userId => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
-    const userToken = userDoc.data()?.fcmToken;
+    const userTokens = userDoc.data()?.fcmtoken;
 
-    if (userToken) {
-      fetch(
-        'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-notification-user-update-profile',
-        {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token: userToken,
-            data: {redirect_to: 'ProfileScreen'},
-          }),
-        },
+    if (userTokens && Array.isArray(userTokens)) {
+      await Promise.all(
+        userTokens.map(async token => {
+          await fetch(
+            'https://surgeon-next-symantec-tops.trycloudflare.com/send-notification-user-update-profile',
+            {
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token: token,
+                data: {redirect_to: 'ProfileScreen'},
+              }),
+            },
+          );
+        }),
       );
+      // console.log('API_BASE_URL:', API_BASE_URL);
     } else {
-      console.error('User token not found');
+      console.error('User tokens not found or not an array');
     }
   } catch (error) {
-    console.error('Error fetching user token: ', error);
+    console.error('Error fetching user tokens: ', error);
   }
 };
 
-const ProfileScreen: React.FC = () => {
+const ProfileScreen = () => {
   const navigation = useNavigation();
-  let [password, setPassword] = useState('');
-  let [name, setName] = useState('');
-  const [isNotifyPressed, setIsNotifyPressed] = useState(false); // New state for Notify Me button
-  const [isLoading, setIsLoading] = useState(true); // New state for loading
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isNotifyPressed, setIsNotifyPressed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notifyStatus, setNotifyStatus] = useState(null);
 
   useEffect(() => {
     const checkNotifyStatus = async () => {
       try {
         const user = auth().currentUser;
         if (user) {
-          const notifyDoc = await firestore()
+          firestore()
             .collection('Notify')
             .doc(user.uid)
-            .get();
-          setIsNotifyPressed(notifyDoc.exists);
+            .onSnapshot(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                if (
+                  data?.fcmtoken &&
+                  data?.fcmtoken.length > 0 &&
+                  data?.userId
+                ) {
+                  setNotifyStatus('notified');
+                } else if (data?.userId) {
+                  setNotifyStatus('viewFunctionality');
+                } else {
+                  setNotifyStatus(null);
+                }
+              } else {
+                setNotifyStatus(null);
+              }
+            });
         }
       } catch (error) {
         console.error('Error checking notify status:', error);
@@ -81,25 +103,20 @@ const ProfileScreen: React.FC = () => {
           .get();
         const userName = userDoc.data()?.name;
         const userpass = userDoc.data()?.password;
-        console.log(userName);
-        console.log(userpass);
 
         if (userName === name && userpass === password) {
           Alert.alert('Same name and password as previous');
         } else {
           if (password) {
             await user.updatePassword(password);
-            console.log('Password updated in Firebase Auth');
             await firestore()
               .collection('Users')
               .doc(user.uid)
               .update({password});
-            console.log('Password updated in Firestore');
           }
 
           if (name) {
             await firestore().collection('Users').doc(user.uid).update({name});
-            console.log('Name updated in Firestore');
           }
           console.log('Profile updated');
           sendNotification(user.uid);
@@ -111,6 +128,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleNotifyMe = async () => {
+    setIsNotifyPressed(true);
     try {
       const user = auth().currentUser;
       if (user) {
@@ -123,19 +141,17 @@ const ProfileScreen: React.FC = () => {
             .collection('Users')
             .doc(user.uid)
             .get();
-          const userToken = userDoc.data()?.fcmToken;
+          const userTokens = userDoc.data()?.fcmtoken;
 
-          if (userToken) {
+          if (userTokens && Array.isArray(userTokens)) {
             await firestore().collection('Notify').doc(user.uid).set({
               userId: user.uid,
-              fcmToken: userToken,
+              fcmtoken: userTokens,
             });
-            setIsNotifyPressed(true);
+            setNotifyStatus('notified');
           } else {
-            console.error('FCM token not found for the user');
+            console.error('FCM tokens not found or not an array for the user');
           }
-        } else {
-          setIsNotifyPressed(true);
         }
       }
     } catch (error) {
@@ -147,10 +163,8 @@ const ProfileScreen: React.FC = () => {
     try {
       await auth().signOut();
       console.log('Logged out');
-
       const currentUser = auth().currentUser;
       console.log('User after logout:', currentUser);
-
       navigation.navigate('LoginScreen');
     } catch (error) {
       console.error('Error logging out:', error);
@@ -198,17 +212,36 @@ const ProfileScreen: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator size="large" color="#000" />
           ) : (
-            <TouchableOpacity
-              style={[
-                styles.notifyButton,
-                isNotifyPressed && styles.notifyButtonPressed,
-              ]}
-              onPress={handleNotifyMe}
-              disabled={isNotifyPressed}>
-              <Text style={styles.buttonText}>
-                {isNotifyPressed ? 'You will be notified soon' : 'Notify Me'}
-              </Text>
-            </TouchableOpacity>
+            <>
+              {notifyStatus === 'notified' ? (
+                <TouchableOpacity
+                  style={[
+                    styles.notifyButton,
+                    isNotifyPressed && styles.notifyButtonPressed,
+                  ]}
+                  disabled={true}>
+                  <Text style={styles.buttonText}>
+                    You will be notified soon
+                  </Text>
+                </TouchableOpacity>
+              ) : notifyStatus === 'viewFunctionality' ? (
+                <TouchableOpacity
+                  style={styles.viewFunctionalityButton}
+                  onPress={() => navigation.navigate('NotifyMeRedirectScreen')}>
+                  <Text style={styles.buttonText}>View New Functionality</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.notifyButton,
+                    isNotifyPressed && styles.notifyButtonPressed,
+                  ]}
+                  onPress={handleNotifyMe}
+                  disabled={isNotifyPressed}>
+                  <Text style={styles.buttonText}>Notify Me</Text>
+                </TouchableOpacity>
+              )}
+            </>
           )}
         </View>
         <Text style={styles.poweredByText}>Powered by Tally Solutions</Text>
@@ -298,7 +331,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   notifyButtonPressed: {
-    backgroundColor: '#ccc', // Change button color when pressed
+    backgroundColor: '#ccc',
+  },
+  viewFunctionalityButton: {
+    backgroundColor: '#000',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
   },
   poweredByText: {
     textAlign: 'center',

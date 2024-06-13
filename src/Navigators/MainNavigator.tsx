@@ -15,6 +15,9 @@ import PostScreen from '../Screens/PostScreen';
 import NavigationServices from './NavigationServices'; // Adjust the path as needed
 import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
+import MultipleLoginRedirectScreen from '../Screens/MultipleLoginRedirectScreen';
+import UnauthorisedLoginRedirectScreen from '../Screens/UnauthorisedLoginRedirectScreen';
+import LoadingScreen from '../Screens/LoadingScreen';
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -26,13 +29,35 @@ export type RootStackParamList = {
   PostScreen: {postId: any};
   SplashScreen: undefined;
   NotifyMeRedirectScreen: undefined;
+  MultipleLoginRedirectScreen: undefined;
+  UnauthorisedLoginRedirectScreen: undefined;
+  LoadingScreen: undefined;
 };
 const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: [
+    'https://surgeon-next-symantec-tops.trycloudflare.com',
+    'tallybuzz://',
+  ],
+  config: {
+    screens: {
+      HomeScreen: 'home',
+      SignUpScreen: 'signup',
+      LoginScreen: 'login',
+      HomePageScreen: 'homepage',
+      UploadPost: 'uploadpost',
+      ProfileScreen: 'profile',
+      PostScreen: 'post/:postId',
+    },
+  },
+};
+
 const MainNavigator = () => {
   return (
     <NavigationContainer
+      linking={linking}
       ref={ref => NavigationServices.setTopLevelNavigator(ref)}>
       <Stack.Navigator>
         <Stack.Screen
@@ -43,6 +68,21 @@ const MainNavigator = () => {
         <Stack.Screen
           name="NotifyMeRedirectScreen"
           component={NotifyMeRedirectScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="MultipleLoginRedirectScreen"
+          component={MultipleLoginRedirectScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="LoadingScreen"
+          component={LoadingScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="UnauthorisedLoginRedirectScreen"
+          component={UnauthorisedLoginRedirectScreen}
           options={{headerShown: false}}
         />
         <Stack.Screen

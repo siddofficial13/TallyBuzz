@@ -1,40 +1,34 @@
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import moment from 'moment'; // Import moment for date formatting
+import moment from 'moment';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { StackActions, useNavigation } from '@react-navigation/native';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface Post {
   id: string;
   title: string;
   description: string;
-  imageUrl: string; // Changed from imageUri to imageUrl
+  imageUrl: string;
   userId: string;
   likes: string[];
-  createdAt: any; // Use any type to store Firestore timestamp
-  userName: string; // Add userName to the interface
+  createdAt: any;
+  userName: string;
 }
 
 const HomePageScreen = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   const userId = auth().currentUser?.uid;
 
   useEffect(() => {
-    const unsubscribe = firestore()
+    const unsubscribePosts = firestore()
       .collection('posts')
       .orderBy('createdAt', 'desc')
       .onSnapshot(
@@ -46,18 +40,18 @@ const HomePageScreen = () => {
               .collection('Users')
               .doc(postData.userId)
               .get();
-            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown'; // Fetch user name
+            const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
 
-            const likes = postData.likes || []; // Handle undefined likes
+            const likes = postData.likes || [];
             postsList.push({
               id: doc.id,
               title: postData.title,
               description: postData.description,
-              imageUrl: postData.imageUrl, // Changed from imageUri to imageUrl
+              imageUrl: postData.imageUrl,
               userId: postData.userId,
-              likes: likes, // Initialize likes with empty array if undefined
-              createdAt: postData.createdAt, // Add createdAt field
-              userName: userName, // Add userName field
+              likes: likes,
+              createdAt: postData.createdAt,
+              userName: userName,
             });
           }
           setPosts(postsList);
@@ -69,69 +63,96 @@ const HomePageScreen = () => {
         },
       );
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    const unsubscribeUsers = firestore()
+      .collection('Users')
+      .onSnapshot(snapshot => {
+        setPosts(prevPosts =>
+          prevPosts.map(post => {
+            const userDoc = snapshot.docs.find(doc => doc.id === post.userId);
+            if (userDoc) {
+              return { ...post, userName: userDoc.data().name };
+            }
+            return post;
+          }),
+        );
+      });
+
+    return () => {
+      unsubscribePosts();
+      unsubscribeUsers();
+    };
   }, []);
 
   const sendNoti2 = async (
     userId: string,
     likerName: string,
     postId: string,
+    imageUrl: string
   ) => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
-      const userToken = userDoc.data()?.fcmToken;
+      const userTokens = userDoc.data()?.fcmtoken;
 
-      if (userToken) {
-        fetch(
-          'https://dietary-scholarships-pmc-actually.trycloudflare.com/send-noti-user',
-          {
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json',
+      if (userTokens && Array.isArray(userTokens)) {
+        userTokens.forEach(token => {
+          fetch(
+            'https://argentina-zum-ks-ny.trycloudflare.com/send-noti-user',
+            {
+              method: 'post',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token: token,
+                title: 'New Like',
+                body: `${likerName} liked your post!`,
+                data: { redirect_to: 'PostScreen', postId: postId },
+                imageUrl: imageUrl,
+                actions: [
+                  { title: 'View', pressAction: { id: 'view' } },
+                  { title: 'Dismiss', pressAction: { id: 'dismiss' } },
+                ],
+                group: 'social', // Added group ID
+                groupSummary: false, // Individual notification, not the summary
+              }),
             },
-            body: JSON.stringify({
-              token: userToken,
-              title: 'New Like',
-              body: `${likerName} liked your post!`,
-              data: {redirect_to: 'PostScreen', postId: postId},
-            }),
-          },
-        );
+          );
+        });
       } else {
-        console.error('User token not found');
+        console.error('User tokens not found or not an array');
       }
     } catch (error) {
-      console.error('Error fetching user token: ', error);
+      console.error('Error fetching user tokens: ', error);
     }
   };
 
-  const handleLike = async (postId: string) => {
+  const handleLike = async (postId: string, imageUrl: string) => {
     try {
       const postRef = firestore().collection('posts').doc(postId);
       const postDoc = await postRef.get();
 
       if (postDoc.exists) {
         const postData = postDoc.data();
-        const updatedLikes = postData.likes.includes(userId)
+        const updatedLikes = postData?.likes.includes(userId)
           ? postData.likes.filter((id: string) => id !== userId)
-          : [...postData.likes, userId];
+          : [...postData?.likes, userId];
 
-        await postRef.update({likes: updatedLikes});
+        await postRef.update({ likes: updatedLikes });
 
         setPosts(prevPosts =>
           prevPosts.map(post =>
-            post.id === postId ? {...post, likes: updatedLikes} : post,
+            post.id === postId ? { ...post, likes: updatedLikes } : post,
           ),
         );
 
         // Send notification to the post owner
-        if (!postData.likes.includes(userId)) {
+        if (!postData?.likes.includes(userId)) {
           const likerDoc = await firestore()
             .collection('Users')
             .doc(userId)
             .get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
-          sendNoti2(postData.userId, likerName, postId);
+          sendNoti2(postData?.userId, likerName, postId, imageUrl);
         }
       }
     } catch (error) {
@@ -142,7 +163,7 @@ const HomePageScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text style={{ color: '#000' }}>Loading...</Text>
       </View>
     );
   }
@@ -154,20 +175,26 @@ const HomePageScreen = () => {
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
             <Text style={styles.userName}>{post.userName}</Text>
-            {post.imageUrl ? (
-              <Image source={{uri: post.imageUrl}} style={styles.postImage} />
-            ) : null}
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('PostScreen', { postId: post.id })
+              }>
+              {post.imageUrl ? (
+                <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
+              ) : null}
+            </TouchableOpacity>
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postDescription}>{post.description}</Text>
             <View style={styles.likeContainer}>
-              <TouchableOpacity onPress={() => handleLike(post.id)}>
+              <TouchableOpacity
+                onPress={() => handleLike(post.id, post.imageUrl)}>
                 <Image
                   source={
                     post.likes.includes(userId)
                       ? require('../assets/heartred.png')
                       : require('../assets/heart.png')
                   }
-                  style={{width: 24, height: 24}}
+                  style={{ width: 24, height: 24 }}
                 />
               </TouchableOpacity>
               <Text style={styles.likeCount}>{post.likes.length}</Text>
@@ -205,7 +232,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2, // for Android
     shadowColor: '#000', // black shadow color for iOS
-    shadowOffset: {width: 0, height: 1}, // for iOS
+    shadowOffset: { width: 0, height: 1 }, // for iOS
     shadowOpacity: 0.8, // for iOS
     shadowRadius: 1, // for iOS
     borderRadius: 5,
