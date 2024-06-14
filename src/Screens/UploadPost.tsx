@@ -104,7 +104,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://argentina-zum-ks-ny.trycloudflare.com/send-broadcast',
+                  'https://quantities-introduced-made-electrical.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {

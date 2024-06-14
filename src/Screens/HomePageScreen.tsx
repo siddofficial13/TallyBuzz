@@ -96,7 +96,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://argentina-zum-ks-ny.trycloudflare.com/send-noti-user',
+            'https://quantities-introduced-made-electrical.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {
@@ -112,8 +112,7 @@ const HomePageScreen = () => {
                   { title: 'View', pressAction: { id: 'view' } },
                   { title: 'Dismiss', pressAction: { id: 'dismiss' } },
                 ],
-                group: 'social', // Added group ID
-                groupSummary: false, // Individual notification, not the summary
+                type:'Like_post',
               }),
             },
           );
