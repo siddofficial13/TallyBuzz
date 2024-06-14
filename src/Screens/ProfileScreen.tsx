@@ -25,7 +25,7 @@ const sendNotification = async userId => {
       await Promise.all(
         userTokens.map(async token => {
           await fetch(
-            'https://select-ireland-refinance-porsche.trycloudflare.com/send-notification-user-update-profile',
+            'https://hopefully-socket-ll-airport.trycloudflare.com/send-notification-user-update-profile',
             {
               method: 'post',
               headers: {

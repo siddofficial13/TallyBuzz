@@ -102,7 +102,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://select-ireland-refinance-porsche.trycloudflare.com/send-broadcast',
+                  'https://hopefully-socket-ll-airport.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {

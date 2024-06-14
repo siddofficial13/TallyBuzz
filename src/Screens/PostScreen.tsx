@@ -1,10 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, Image, ScrollView} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  Pressable,
+  Linking,
+  Platform,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import {RouteProp, useRoute} from '@react-navigation/native';
-import storage from '@react-native-firebase/storage';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import {Share} from 'react-native';
 
 interface Post {
   title: string;
@@ -65,6 +74,60 @@ const PostScreen: React.FC = () => {
 
     fetchPostAndLikes();
   }, [postId]);
+  const isAppInstalled = async () => {
+    const appUrlScheme = 'tallybuzz://'; // Your app's URL scheme
+
+    try {
+      // Check if the app is installed
+      const supported = await Linking.canOpenURL(appUrlScheme);
+      return supported;
+    } catch (error) {
+      console.error('Error checking if app is installed:', error);
+      return false;
+    }
+  };
+  const handleShare = async () => {
+    try {
+      const appInstalled = await isAppInstalled();
+      if (!appInstalled) {
+        const url =
+          'https://play.google.com/store/apps/details?id=com.tallyedge';
+        if (await Linking.canOpenURL(url)) {
+          await Linking.openURL(url);
+        }
+      } else {
+        const shareLink = `https://tallybuzz.dynalinks.app/post/${postId}`;
+        const options = {
+          message: `Check out this post on TallyBuzz: ${shareLink}`,
+        };
+
+        const result = await Share.share(options);
+
+        if (result.action === Share.sharedAction) {
+          if (result.activityType) {
+            console.log('Shared with activity type:', result.activityType);
+          } else {
+            console.log('Shared');
+          }
+        } else if (result.action === Share.dismissedAction) {
+          console.log('Dismissed');
+        }
+      }
+
+      // Check if the app is not installed
+      // if (result.action === Share.sharedAction && result.activityType) {
+      //   if (result.activityType.includes('com.google.android.apps.docs')) {
+      //     const url =
+      //       'https://play.google.com/store/apps/details?id=com.tallyedge';
+      //     if (await Linking.canOpenURL(url)) {
+      //       await Linking.openURL(url);
+      //     }
+      //   }
+      // }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -86,7 +149,15 @@ const PostScreen: React.FC = () => {
     <View style={styles.container}>
       <Header />
       <ScrollView contentContainerStyle={styles.scontainer}>
-        <Text style={styles.postTitle}>{post.title}</Text>
+        <View style={styles.postHeader}>
+          <Text style={styles.postTitle}>{post.title}</Text>
+          <Pressable onPress={handleShare}>
+            <Image
+              source={require('../assets/share.png')} // Replace with your share icon image
+              style={styles.shareIcon}
+            />
+          </Pressable>
+        </View>
         {post.imageUrl ? (
           <Image source={{uri: post.imageUrl}} style={styles.postImage} />
         ) : null}
@@ -127,11 +198,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   postTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
     color: '#000',
+  },
+  shareIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
   postImage: {
     width: '100%',

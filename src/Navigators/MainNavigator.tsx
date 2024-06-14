@@ -37,10 +37,7 @@ const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
-  prefixes: [
-    'https://indoor-paying-campaign-films.trycloudflare.com',
-    'tallybuzz://',
-  ],
+  prefixes: ['https://tallybuzz.dynalinks.app/', 'tallybuzz://'],
   config: {
     screens: {
       HomeScreen: 'home',

@@ -104,7 +104,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://select-ireland-refinance-porsche.trycloudflare.com/send-noti-user',
+            'https://hopefully-socket-ll-airport.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {

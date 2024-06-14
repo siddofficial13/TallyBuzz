@@ -94,7 +94,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://select-ireland-refinance-porsche.trycloudflare.com/send-broadcast-multiple-login',
+                'https://hopefully-socket-ll-airport.trycloudflare.com/send-broadcast-multiple-login',
                 {
                   method: 'POST',
                   headers: {
