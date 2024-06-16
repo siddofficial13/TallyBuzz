@@ -3,32 +3,55 @@
  */
 
 import { AppRegistry } from 'react-native';
+import messaging from '@react-native-firebase/messaging';
 import App from './src/App';
 import { name as appName } from './app.json';
-import messaging from '@react-native-firebase/messaging';
-import auth from '@react-native-firebase/auth'
+import { createNotificationChannel } from './src/Utils/NotificationServices';
+import notifee, { AndroidStyle } from '@notifee/react-native'
 
-messaging().onMessage(async (remoteMessage) => {
-    console.log('Message received in foreground!', remoteMessage);
-    const currentUser = auth().currentUser;
+const displayNotification = async (message) => {
+    const { data } = message;
+    const actions = data.showActions === 'true' ? [
+        {
+            title: 'Like',
+            pressAction: { id: 'like' },
+        },
+        {
+            title: 'Dismiss',
+            pressAction: { id: 'dismiss' },
+        },
+    ] : [];
 
-    if (currentUser.uid && remoteMessage.data?.userId && remoteMessage.data.userId !== currentUser.uid) {
-        console.log('Notification userId does not match current user. Notification will not be displayed.');
-        return;
+    if (data.silentCheck !== 'true') {
+        await notifee.displayNotification({
+            title: data.title,
+            body: data.body,
+            android: {
+                channelId: 'default',
+                smallIcon: 'ic_launcher', // Your app icon
+                pressAction: {
+                    id: 'default',
+                },
+                style: (data.imageUrl !== undefined) ? {
+                    type: AndroidStyle.BIGPICTURE,
+                    picture: data.imageUrl,
+
+                } : {
+                    type: AndroidStyle.INBOX,
+                    lines: [`${data.title}:${data.body}`],
+                },
+                actions,
+            },
+            data,
+        });
     }
-
-    if (remoteMessage.data.silentCheck === 'true') {
-        console.log('Silent notification received');
-    } else {
-        displayNotification(remoteMessage);
-    }
-});
-
-messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+};
+messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
+    await createNotificationChannel();
 
-    if (remoteMessage.data.silentCheck === 'true') {
-        console.log('Silent notification received');
-    }
+    await displayNotification(remoteMessage);
 });
+
+
 AppRegistry.registerComponent(appName, () => App);

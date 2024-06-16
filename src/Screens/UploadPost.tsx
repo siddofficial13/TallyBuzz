@@ -15,11 +15,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
-import moment from 'moment';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
-const { width } = Dimensions.get('window');
 
 interface Post {
     id: string;
@@ -102,7 +98,7 @@ const UploadPost = () => {
                         if (userTokens && Array.isArray(userTokens)) {
                             userTokens.forEach(token => {
                                 fetch(
-                                    `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-broadcast`,
+                                    `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-broadcast`,
                                     {
                                         method: 'POST',
                                         headers: {
@@ -110,9 +106,19 @@ const UploadPost = () => {
                                         },
                                         body: JSON.stringify({
                                             token: token,
-                                            title: 'New Post Alert',
-                                            body: `${userName} just uploaded a new post!`,
-                                            data: { redirect_to: 'PostScreen', postId: postRef.id, userId: userId },
+                                            data: {
+                                                title: 'New Post Alert',
+                                                body: `${userName} just uploaded a new post!`,
+                                                redirect_to: 'PostScreen',
+                                                postId: postRef.id,
+                                                userId: userId,
+                                                imageUrl: imageUrl,
+                                                showActions: 'true',
+                                            },
+                                            actions: [
+                                                { title: 'Like', pressAction: { id: 'like' } },
+                                                { title: 'Dismiss', pressAction: { id: 'dismiss' } },
+                                            ],
                                         }),
                                     },
                                 );
@@ -175,7 +181,7 @@ const UploadPost = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007bff" />
+                <ActivityIndicator size="large" color="#000" />
             </View>
         );
     }

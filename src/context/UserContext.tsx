@@ -10,13 +10,16 @@ interface User {
 interface UserContextProps {
     user: User;
     setUser: React.Dispatch<React.SetStateAction<User>>;
+    unseenNotifications: boolean;
     fetchUserData: () => void;
+    checkUnseenNotifications: () => void;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>({ name: '', email: '' });
+    const [unseenNotifications, setUnseenNotifications] = useState<boolean>(false);
 
     const fetchUserData = async () => {
         const currentUser = auth().currentUser;
@@ -32,12 +35,30 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const checkUnseenNotifications = async () => {
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+            const userDoc = await firestore().collection('Users').doc(currentUser.uid).get();
+            const userData = userDoc.data();
+            if (userData && userData.notifications) {
+                const unseen = userData.notifications.some((notification: any) => !notification.seen);
+                setUnseenNotifications(unseen);
+            }
+        }
+    };
+
     useEffect(() => {
         fetchUserData();
+        checkUnseenNotifications();
+        const unsubscribe = firestore()
+            .collection('Users')
+            .doc(auth().currentUser?.uid)
+            .onSnapshot(checkUnseenNotifications);
+        return () => unsubscribe();
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, setUser, fetchUserData }}>
+        <UserContext.Provider value={{ user, setUser, unseenNotifications, fetchUserData, checkUnseenNotifications }}>
             {children}
         </UserContext.Provider>
     );

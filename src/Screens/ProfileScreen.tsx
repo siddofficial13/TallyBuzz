@@ -24,7 +24,7 @@ const sendNotification = async userId => {
             await Promise.all(
                 userTokens.map(async token => {
                     await fetch(
-                        `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-notification-user-update-profile`,
+                        `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-notification-user-update-profile`,
                         {
                             method: 'post',
                             headers: {
@@ -32,7 +32,10 @@ const sendNotification = async userId => {
                             },
                             body: JSON.stringify({
                                 token: token,
-                                data: { redirect_to: 'ProfileScreen', userId: userId },
+                                data: {
+                                    redirect_to: 'ProfileScreen',
+                                    userId: userId,
+                                },
                             }),
                         },
                     );
@@ -50,6 +53,7 @@ const ProfileScreen = () => {
     const navigation = useNavigation();
     const { user, setUser, fetchUserData } = useUser();
     const [password, setPassword] = useState('');
+    const [currentPassword, setCurrentPassword] = useState(''); // Add this line
     const [name, setName] = useState(user.name);
     const [email, setEmail] = useState('');
     const [isNotifyPressed, setIsNotifyPressed] = useState(false);
@@ -112,14 +116,21 @@ const ProfileScreen = () => {
         checkNotifyStatus();
     }, []);
 
+    const reauthenticateUser = async (currentPassword: any) => {
+        const user = auth().currentUser;
+        if (user && user.email) {
+            const credentials = auth.EmailAuthProvider.credential(user.email, currentPassword);
+            await user.reauthenticateWithCredential(credentials);
+        } else {
+            throw new Error('No user is currently signed in or user email is missing');
+        }
+    };
+
     const handleUpdateProfile = async () => {
         try {
             const user = auth().currentUser;
             if (user) {
-                const userDoc = await firestore()
-                    .collection('Users')
-                    .doc(user.uid)
-                    .get();
+                const userDoc = await firestore().collection('Users').doc(user.uid).get();
                 const userName = userDoc.data()?.name;
                 const userPass = userDoc.data()?.password;
 
@@ -127,11 +138,15 @@ const ProfileScreen = () => {
                     Alert.alert('Same name and password as previous');
                 } else {
                     if (password) {
-                        await user.updatePassword(password);
-                        await firestore()
-                            .collection('Users')
-                            .doc(user.uid)
-                            .update({ password });
+                        try {
+                            await reauthenticateUser(currentPassword);
+                            await user.updatePassword(password);
+                            await firestore().collection('Users').doc(user.uid).update({ password });
+                        } catch (reauthError) {
+                            console.error('Re-authentication failed:', reauthError);
+                            Alert.alert('Re-authentication failed', 'Please re-authenticate to update your password.');
+                            return;
+                        }
                     }
 
                     if (name) {
@@ -152,15 +167,9 @@ const ProfileScreen = () => {
         try {
             const user = auth().currentUser;
             if (user) {
-                const notifyDoc = await firestore()
-                    .collection('Notify')
-                    .doc(user.uid)
-                    .get();
+                const notifyDoc = await firestore().collection('Notify').doc(user.uid).get();
                 if (!notifyDoc.exists) {
-                    const userDoc = await firestore()
-                        .collection('Users')
-                        .doc(user.uid)
-                        .get();
+                    const userDoc = await firestore().collection('Users').doc(user.uid).get();
                     const userTokens = userDoc.data()?.fcmtoken;
 
                     if (userTokens && Array.isArray(userTokens)) {
@@ -185,7 +194,10 @@ const ProfileScreen = () => {
             console.log('Logged out');
             const currentUser = auth().currentUser;
             console.log('User after logout:', currentUser);
-            navigation.navigate('LoginScreen');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+            });
         } catch (error) {
             console.error('Error logging out:', error);
         }
@@ -221,6 +233,14 @@ const ProfileScreen = () => {
                     secureTextEntry={true}
                     value={password}
                     onChangeText={setPassword}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Current Password"
+                    placeholderTextColor="#999"
+                    secureTextEntry={true}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
                 />
                 <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
                     <Text style={styles.buttonText}>Update Profile</Text>

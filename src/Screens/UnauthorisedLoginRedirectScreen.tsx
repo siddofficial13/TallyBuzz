@@ -12,7 +12,10 @@ const UnauthorisedLoginRedirectScreen = () => {
             console.log('Logged out');
             const currentUser = auth().currentUser;
             console.log('User after logout:', currentUser);
-            navigation.navigate('LoginScreen');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+            });
         } catch (error) {
             console.error('Error logging out:', error);
         }

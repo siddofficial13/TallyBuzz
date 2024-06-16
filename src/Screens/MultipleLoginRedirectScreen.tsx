@@ -49,7 +49,7 @@ const MultipleLoginRedirectScreen = () => {
             if (token !== null) {
                 // Send notification to the current device (device Z)
                 await fetch(
-                    `https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-notification-unauthorised-login`,
+                    `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-notification-unauthorised-login`,
                     {
                         method: 'POST',
                         headers: {

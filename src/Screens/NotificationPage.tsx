@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, FlatList, TouchableOpacity, ActivityIndicator }
 import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import { useUser } from '../context/UserContext';
 
 interface Notification {
     body: string;
@@ -15,6 +16,7 @@ const NotificationPage: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
+    const { checkUnseenNotifications } = useUser();
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -50,6 +52,9 @@ const NotificationPage: React.FC = () => {
         await firestore().collection('Users').doc(currentUser?.uid).update({
             notifications: updatedNotifications,
         });
+
+        // Re-check unseen notifications status
+        await checkUnseenNotifications();
 
         // Navigate to the appropriate screen
         if (redirect_to) {
@@ -100,7 +105,7 @@ const styles = StyleSheet.create({
     },
     notificationText: {
         fontSize: 16,
-        color: '#000'
+        color: '#000',
     },
     loadingContainer: {
         flex: 1,

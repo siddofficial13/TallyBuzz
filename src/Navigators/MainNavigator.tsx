@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {
-  NavigationContainer,
-  NavigationContainerRef,
-  useNavigationContainerRef,
-} from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef, } from '@react-navigation/native';
 import HomeScreen from '../Screens/HomeScreen';
 import LoginScreen from '../Screens/LoginScreen';
 import SignUpScreen from '../Screens/SignUpScreen';
@@ -13,7 +9,7 @@ import HomePageScreen from '../Screens/HomePageScreen';
 import UploadPost from '../Screens/UploadPost';
 import ProfileScreen from '../Screens/ProfileScreen';
 import PostScreen from '../Screens/PostScreen';
-import NavigationServices from './NavigationServices'; // Adjust the path as needed
+import NavigationServices from './NavigationServices';
 import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
 import MultipleLoginRedirectScreen from '../Screens/MultipleLoginRedirectScreen';
@@ -35,14 +31,14 @@ export type RootStackParamList = {
   NotifyMeRedirectScreen: undefined;
   MultipleLoginRedirectScreen: undefined;
   UnauthorisedLoginRedirectScreen: undefined;
-  NotificationPage: undefined,
+  NotificationPage: undefined;
 };
 
 const { width } = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
-  prefixes: ['https://tune-earthquake-caroline-fantasy.trycloudflare.com', 'tallybuzz://'],
+  prefixes: ['https://tallybuzz.dynalinks.app/', 'tallybuzz://'],
   config: {
     screens: {
       HomeScreen: 'home',
@@ -56,9 +52,10 @@ const linking = {
   },
 };
 
-const MainNavigator = () => {
+const MainNavigator: React.FC = () => {
   const navigationRef = useNavigationContainerRef();
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(undefined);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const getCurrentRouteName = () => {
@@ -75,16 +72,20 @@ const MainNavigator = () => {
     return () => unsubscribe();
   }, [navigationRef]);
 
+  useEffect(() => {
+    if (isReady) {
+      NavigationServices.setTopLevelNavigator(navigationRef);
+    }
+  }, [isReady]);
+
   const showHeaderFooter = ['HomePageScreen', 'UploadPost', 'ProfileScreen', 'PostScreen', 'NotificationPage'].includes(currentRoute);
 
   return (
     <UserProvider>
       <NavigationContainer
         linking={linking}
-        ref={ref => {
-          NavigationServices.setTopLevelNavigator(ref);
-          if (ref) navigationRef.current = ref;
-        }}
+        ref={navigationRef}
+        onReady={() => setIsReady(true)}
       >
         {showHeaderFooter && <Header />}
         <Stack.Navigator>

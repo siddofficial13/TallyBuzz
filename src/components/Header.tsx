@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 
 const Header: React.FC = () => {
-    const { user } = useUser();
+    const { user, unseenNotifications } = useUser();
     const navigation = useNavigation();
 
     const handleNotificationPress = () => {
@@ -21,11 +21,16 @@ const Header: React.FC = () => {
             <View style={styles.userInfo}>
                 <Text style={styles.userName}>{user.name}</Text>
                 <TouchableOpacity onPress={handleNotificationPress}>
-                    <Image
-                        source={require('../assets/notification.png')} // Add your notification image
-                        style={styles.notificationIcon}
-                        resizeMode="contain"
-                    />
+                    <View style={styles.notificationContainer}>
+                        <Image
+                            source={require('../assets/notification.png')} // Add your notification image
+                            style={styles.notificationIcon}
+                            resizeMode="contain"
+                        />
+                        {unseenNotifications && (
+                            <Text style={styles.redDot} ></Text>
+                        )}
+                    </View>
                 </TouchableOpacity>
             </View>
         </View>
@@ -56,10 +61,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
+    notificationContainer: {
+        position: 'relative',
+    },
     notificationIcon: {
         width: 20,
         height: 20,
-        marginLeft: 10, // Adjust the margin as needed
+        marginLeft: 10,
+    },
+    redDot: {
+        position: 'absolute',
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: 'red',
+        top: -4,
+        right: -1,
     },
     headerImage: {
         width: 100,

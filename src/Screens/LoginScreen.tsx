@@ -17,12 +17,11 @@ import firestore from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
-import { StackActions } from '@react-navigation/native';
 
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 // Function to store a token
-const storeToken = async token => {
+const storeToken = async (token: string) => {
   try {
     // Reference to the collection
     const tokenCollectionRef = firestore().collection('multipleLoginfcmtoken');
@@ -50,6 +49,7 @@ const storeToken = async token => {
     console.error('Error storing token:', error);
   }
 };
+
 const LoginScreen = ({ navigation, route }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,7 +91,7 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://myrtle-olympics-vietnam-bite.trycloudflare.com/send-broadcast-multiple-login',
+                'https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-broadcast-multiple-login',
                 {
                   method: 'POST',
                   headers: {
@@ -110,10 +110,11 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         };
 
         await sendNotificationMultipleLogin();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: screen || 'HomePageScreen', params }],
+        });
 
-        navigation.dispatch(
-          StackActions.replace(screen || 'HomePageScreen', params),
-        );
       } else {
         Alert.alert('Please enter your credentials');
       }
