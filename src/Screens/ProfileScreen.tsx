@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {useNavigation} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
+import {useUser} from '../context/UserContext';
 import {
   View,
   Text,
@@ -13,9 +14,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import {API_BASE_URL} from '@env';
+
 const sendNotification = async userId => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
@@ -25,7 +24,7 @@ const sendNotification = async userId => {
       await Promise.all(
         userTokens.map(async token => {
           await fetch(
-            'https://hopefully-socket-ll-airport.trycloudflare.com/send-notification-user-update-profile',
+            'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-user-update-profile',
             {
               method: 'post',
               headers: {
@@ -33,13 +32,15 @@ const sendNotification = async userId => {
               },
               body: JSON.stringify({
                 token: token,
-                data: {redirect_to: 'ProfileScreen'},
+                data: {
+                  redirect_to: 'ProfileScreen',
+                  userId: userId,
+                },
               }),
             },
           );
         }),
       );
-      console.log('API_BASE_URL:', API_BASE_URL);
     } else {
       console.error('User tokens not found or not an array');
     }
@@ -50,13 +51,36 @@ const sendNotification = async userId => {
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+  const {user, setUser, fetchUserData} = useUser();
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [currentPassword, setCurrentPassword] = useState(''); // Add this line
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState('');
   const [isNotifyPressed, setIsNotifyPressed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notifyStatus, setNotifyStatus] = useState(null);
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const user = auth().currentUser;
+        if (user) {
+          const userDoc = await firestore()
+            .collection('Users')
+            .doc(user.uid)
+            .get();
+          const userData = userDoc.data();
+          if (userData) {
+            setName(userData.name || '');
+            setEmail(user.email || '');
+            setPassword(userData.password || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
     const checkNotifyStatus = async () => {
       try {
         const user = auth().currentUser;
@@ -90,8 +114,24 @@ const ProfileScreen = () => {
       }
     };
 
+    fetchUserData();
     checkNotifyStatus();
   }, []);
+
+  const reauthenticateUser = async (currentPassword: any) => {
+    const user = auth().currentUser;
+    if (user && user.email) {
+      const credentials = auth.EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await user.reauthenticateWithCredential(credentials);
+    } else {
+      throw new Error(
+        'No user is currently signed in or user email is missing',
+      );
+    }
+  };
 
   const handleUpdateProfile = async () => {
     try {
@@ -102,21 +142,32 @@ const ProfileScreen = () => {
           .doc(user.uid)
           .get();
         const userName = userDoc.data()?.name;
-        const userpass = userDoc.data()?.password;
+        const userPass = userDoc.data()?.password;
 
-        if (userName === name && userpass === password) {
+        if (userName === name && userPass === password) {
           Alert.alert('Same name and password as previous');
         } else {
           if (password) {
-            await user.updatePassword(password);
-            await firestore()
-              .collection('Users')
-              .doc(user.uid)
-              .update({password});
+            try {
+              await reauthenticateUser(currentPassword);
+              await user.updatePassword(password);
+              await firestore()
+                .collection('Users')
+                .doc(user.uid)
+                .update({password});
+            } catch (reauthError) {
+              console.error('Re-authentication failed:', reauthError);
+              Alert.alert(
+                'Re-authentication failed',
+                'Please re-authenticate to update your password.',
+              );
+              return;
+            }
           }
 
           if (name) {
             await firestore().collection('Users').doc(user.uid).update({name});
+            setUser(prevState => ({...prevState, name}));
           }
           console.log('Profile updated');
           sendNotification(user.uid);
@@ -165,7 +216,10 @@ const ProfileScreen = () => {
       console.log('Logged out');
       const currentUser = auth().currentUser;
       console.log('User after logout:', currentUser);
-      navigation.navigate('LoginScreen');
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'LoginScreen'}],
+      });
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -173,8 +227,11 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.userInfoContainer}>
+          <Text style={styles.userInfo}>Name: {name}</Text>
+          <Text style={styles.userInfo}>Email: {email}</Text>
+        </View>
         <View style={styles.headerContainer}>
           <Text style={styles.header}>Update Profile</Text>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -198,6 +255,14 @@ const ProfileScreen = () => {
           secureTextEntry={true}
           value={password}
           onChangeText={setPassword}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Current Password"
+          placeholderTextColor="#999"
+          secureTextEntry={true}
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
         />
         <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
           <Text style={styles.buttonText}>Update Profile</Text>
@@ -244,12 +309,7 @@ const ProfileScreen = () => {
             </>
           )}
         </View>
-        <Text style={styles.poweredByText}>Powered by Tally Solutions</Text>
-        <TouchableOpacity>
-          <Text style={styles.websiteLink}>Visit our website</Text>
-        </TouchableOpacity>
       </ScrollView>
-      <Footer />
     </View>
   );
 };
@@ -262,6 +322,14 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
+  },
+  userInfoContainer: {
+    marginBottom: 20,
+  },
+  userInfo: {
+    fontSize: 18,
+    color: '#000',
+    marginBottom: 10,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -339,16 +407,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 10,
-  },
-  poweredByText: {
-    textAlign: 'center',
-    color: '#000',
-    marginVertical: 10,
-  },
-  websiteLink: {
-    textAlign: 'center',
-    color: '#000',
-    textDecorationLine: 'underline',
   },
 });
 

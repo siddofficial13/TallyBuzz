@@ -15,11 +15,6 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import {launchImageLibrary} from 'react-native-image-picker';
-import moment from 'moment';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import {API_BASE_URL} from '@env';
-const {width} = Dimensions.get('window');
 
 interface Post {
   id: string;
@@ -89,7 +84,7 @@ const UploadPost = () => {
       });
 
       const userDoc = await firestore().collection('Users').doc(user.uid).get();
-      const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
+      const userName = userDoc.exists ? userDoc.data()?.name : 'TallyBuzz_User';
 
       // Send notifications to all users except the one who posted
       const sendNotificationToUsers = async () => {
@@ -102,7 +97,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://hopefully-socket-ll-airport.trycloudflare.com/send-broadcast',
+                  'https://prayers-examined-pending-intensity.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {
@@ -110,9 +105,19 @@ const UploadPost = () => {
                     },
                     body: JSON.stringify({
                       token: token,
-                      title: 'New Post Alert',
-                      body: `${userName} just uploaded a new post!`,
-                      data: {redirect_to: 'PostScreen', postId: postRef.id},
+                      data: {
+                        title: 'New Post Alert',
+                        body: `${userName} just uploaded a new post!`,
+                        redirect_to: 'PostScreen',
+                        postId: postRef.id,
+                        userId: userId,
+                        imageUrl: imageUrl,
+                        showActions: 'true',
+                      },
+                      actions: [
+                        {title: 'Like', pressAction: {id: 'like'}},
+                        {title: 'Dismiss', pressAction: {id: 'dismiss'}},
+                      ],
                     }),
                   },
                 );
@@ -120,7 +125,6 @@ const UploadPost = () => {
             }
           }
         });
-        console.log('API_BASE_URL:', API_BASE_URL);
       };
       await sendNotificationToUsers();
 
@@ -176,14 +180,14 @@ const UploadPost = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Header />
+      {/* <Header /> */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.header}>Upload Post</Text>
         <TextInput
@@ -214,7 +218,7 @@ const UploadPost = () => {
           <Text style={styles.buttonText}>Submit Post</Text>
         </TouchableOpacity>
       </ScrollView>
-      <Footer />
+      {/* <Footer /> */}
     </View>
   );
 };

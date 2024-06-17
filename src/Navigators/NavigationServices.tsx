@@ -8,9 +8,29 @@ function setTopLevelNavigator(
   _navigator = navigatorRef;
 }
 
-function navigate(routeName: string, params?: object) {
+function navigate(name: string, params?: Record<string, any>) {
   if (_navigator && _navigator.isReady()) {
-    _navigator.navigate(routeName, params);
+    _navigator.dispatch(
+      CommonActions.navigate({
+        name,
+        params,
+      }),
+    );
+  } else {
+    console.warn(
+      'Navigation container is not ready or navigator reference is null.',
+    );
+  }
+}
+
+function reset(name: string, params?: Record<string, any>) {
+  if (_navigator && _navigator.isReady()) {
+    _navigator.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name, params}],
+      }),
+    );
   } else {
     console.warn(
       'Navigation container is not ready or navigator reference is null.',
@@ -30,6 +50,7 @@ function goBack() {
 
 export default {
   navigate,
-  setTopLevelNavigator,
+  reset,
   goBack,
+  setTopLevelNavigator,
 };

@@ -11,8 +11,6 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import {RouteProp, useRoute} from '@react-navigation/native';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import {Share} from 'react-native';
 
 interface Post {
@@ -147,7 +145,6 @@ const PostScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
       <ScrollView contentContainerStyle={styles.scontainer}>
         <View style={styles.postHeader}>
           <Text style={styles.postTitle}>{post.title}</Text>
@@ -178,7 +175,6 @@ const PostScreen: React.FC = () => {
           <Text style={styles.noLikes}>No likes yet</Text>
         )}
       </ScrollView>
-      <Footer />
     </View>
   );
 };

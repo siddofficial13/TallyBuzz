@@ -18,12 +18,11 @@ import messaging from '@react-native-firebase/messaging';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../Navigators/MainNavigator';
 import {StackActions} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {API_BASE_URL} from '@env';
+
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 // Function to store a token
-const storeToken = async token => {
+const storeToken = async (token: string) => {
   try {
     // Reference to the collection
     const tokenCollectionRef = firestore().collection('multipleLoginfcmtoken');
@@ -94,7 +93,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://hopefully-socket-ll-airport.trycloudflare.com/send-broadcast-multiple-login',
+                'https://prayers-examined-pending-intensity.trycloudflare.com/send-broadcast-multiple-login',
                 {
                   method: 'POST',
                   headers: {
@@ -110,13 +109,14 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
               );
             });
           }
-          console.log('API_BASE_URL:', API_BASE_URL);
+          // console.log('API_BASE_URL:', API_BASE_URL);
         };
         console.log(fcm_token_array.length);
         if (fcm_token_array.length === 1) {
-          navigation.dispatch(
-            StackActions.replace(screen || 'HomePageScreen', params),
-          );
+          navigation.reset({
+            index: 0,
+            routes: [{name: screen || 'HomePageScreen', params}],
+          });
         } else {
           await sendNotificationMultipleLogin();
           navigation.dispatch(

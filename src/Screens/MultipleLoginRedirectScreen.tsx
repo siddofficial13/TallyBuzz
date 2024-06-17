@@ -52,7 +52,7 @@ const MultipleLoginRedirectScreen = () => {
       if (token !== null) {
         // Send notification to the current device (device Z)
         await fetch(
-          'https://select-ireland-refinance-porsche.trycloudflare.com/send-notification-authorised-login',
+          'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-authorised-login',
           {
             method: 'POST',
             headers: {
@@ -101,7 +101,7 @@ const MultipleLoginRedirectScreen = () => {
       if (token !== null) {
         // Send notification to the current device (device Z)
         await fetch(
-          'https://hopefully-socket-ll-airport.trycloudflare.com/send-notification-unauthorised-login',
+          'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-unauthorised-login',
           {
             method: 'POST',
             headers: {

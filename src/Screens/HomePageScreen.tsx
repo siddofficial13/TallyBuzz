@@ -11,11 +11,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import {StackActions, useNavigation} from '@react-navigation/native';
-import {API_BASE_URL} from '@env';
-const {width} = Dimensions.get('window');
 
 interface Post {
   id: string;
@@ -104,7 +100,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://hopefully-socket-ll-airport.trycloudflare.com/send-noti-user',
+            'https://prayers-examined-pending-intensity.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {
@@ -112,16 +108,18 @@ const HomePageScreen = () => {
               },
               body: JSON.stringify({
                 token: token,
-                title: 'New Like',
-                body: `${likerName} liked your post!`,
-                data: {redirect_to: 'PostScreen', postId: postId},
-                imageUrl: imageUrl,
+                data: {
+                  title: 'New Like',
+                  body: `${likerName} liked your post!`,
+                  redirect_to: 'PostScreen',
+                  postId: postId,
+                  userId: userId,
+                  imageUrl: imageUrl,
+                },
               }),
             },
           );
         });
-
-        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.error('User tokens not found or not an array');
       }
@@ -155,7 +153,9 @@ const HomePageScreen = () => {
             .collection('Users')
             .doc(userId)
             .get();
-          const likerName = likerDoc.exists ? likerDoc.data()?.name : 'Someone';
+          const likerName = likerDoc.exists
+            ? likerDoc.data()?.name
+            : 'TallyBuzz_User';
           sendNoti2(postData?.userId, likerName, postId, imageUrl);
         }
       }
@@ -174,7 +174,7 @@ const HomePageScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      {/* <Header /> */}
       <ScrollView contentContainerStyle={styles.mainContent}>
         {posts.map(post => (
           <View key={post.id} style={styles.post}>
@@ -211,7 +211,7 @@ const HomePageScreen = () => {
           </View>
         ))}
       </ScrollView>
-      <Footer />
+      {/* <Footer /> */}
     </View>
   );
 };
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    aspectRatio: 0.75, // Adjust the aspect ratio as needed to maintain the image's proportions
+    aspectRatio: 1.2, // Adjust the aspect ratio as needed to maintain the image's proportions
     borderRadius: 5,
     marginBottom: 8,
   },

@@ -1,36 +1,85 @@
-import {Dimensions, Image, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-const {width} = Dimensions.get('window');
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {useUser} from '../context/UserContext';
+import {useNavigation} from '@react-navigation/native';
 
-export default function Header() {
+const Header: React.FC = () => {
+  const {user, unseenNotifications} = useUser();
+  const navigation = useNavigation();
+
+  const handleNotificationPress = () => {
+    navigation.navigate('NotificationPage');
+  };
+
   return (
     <View style={styles.header}>
       <Image
-        source={require('../assets/logo.png')} // replace with your image path
+        source={require('../assets/logo.png')}
         style={styles.headerImage}
         resizeMode="contain"
       />
+      <View style={styles.userInfo}>
+        <Text style={styles.userName}>{user.name}</Text>
+        <TouchableOpacity onPress={handleNotificationPress}>
+          <View style={styles.notificationContainer}>
+            <Image
+              source={require('../assets/notification.png')} // Add your notification image
+              style={styles.notificationIcon}
+              resizeMode="contain"
+            />
+            {unseenNotifications && <Text style={styles.redDot}></Text>}
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   header: {
     width: '100%',
     height: 80,
-    backgroundColor: '#fff', // white background
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 4, // for Android
-    shadowColor: '#000', // black shadow color for iOS
-    shadowOffset: {width: 0, height: 2}, // for iOS
-    shadowOpacity: 0.8, // for iOS
-    shadowRadius: 2, // for iOS
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  notificationContainer: {
+    position: 'relative',
+  },
+  notificationIcon: {
+    width: 20,
+    height: 20,
+    marginLeft: 10,
+  },
+  redDot: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'red',
+    top: -4,
+    right: -1,
   },
   headerImage: {
-    marginTop: 20,
-    width: width,
-    height: '80%',
-    marginBottom: 20,
+    width: 100,
+    height: 40,
   },
 });
+
+export default Header;
