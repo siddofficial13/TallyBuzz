@@ -25,7 +25,7 @@ const sendNotification = async userId => {
       await Promise.all(
         userTokens.map(async token => {
           await fetch(
-            'https://surgeon-next-symantec-tops.trycloudflare.com/send-notification-user-update-profile',
+            'https://filled-says-ftp-sculpture.trycloudflare.com/send-notification-user-update-profile',
             {
               method: 'post',
               headers: {
@@ -33,7 +33,8 @@ const sendNotification = async userId => {
               },
               body: JSON.stringify({
                 token: token,
-                data: {redirect_to: 'ProfileScreen'},
+                data: {redirect_to: 'ProfileScreen',type: "Update_profile"},
+                
               }),
             },
           );

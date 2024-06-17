@@ -96,7 +96,7 @@ const HomePageScreen = () => {
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
           fetch(
-            'https://quantities-introduced-made-electrical.trycloudflare.com/send-noti-user',
+            'https://peaceful-consumption-indicating-gods.trycloudflare.com/send-noti-user',
             {
               method: 'post',
               headers: {
@@ -106,13 +106,13 @@ const HomePageScreen = () => {
                 token: token,
                 title: 'New Like',
                 body: `${likerName} liked your post!`,
-                data: { redirect_to: 'PostScreen', postId: postId },
-                imageUrl: imageUrl,
+                data: { redirect_to: 'PostScreen', postId: postId, type:'Like_post',imageUrl: imageUrl },
+                
                 actions: [
                   { title: 'View', pressAction: { id: 'view' } },
                   { title: 'Dismiss', pressAction: { id: 'dismiss' } },
                 ],
-                type:'Like_post',
+                
               }),
             },
           );

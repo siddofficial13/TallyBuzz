@@ -104,7 +104,7 @@ const UploadPost = () => {
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
                 fetch(
-                  'https://quantities-introduced-made-electrical.trycloudflare.com/send-broadcast',
+                  'https://peaceful-consumption-indicating-gods.trycloudflare.com/send-broadcast',
                   {
                     method: 'POST',
                     headers: {
@@ -114,7 +114,8 @@ const UploadPost = () => {
                       token: token,
                       title: 'New Post Alert',
                       body: `${userName} just uploaded a new post!`,
-                      data: {redirect_to: 'PostScreen', postId: postRef.id},
+                      data: {redirect_to: 'PostScreen', postId: postRef.id, type: "upload_post"},
+                      
                     }),
                   },
                 );
