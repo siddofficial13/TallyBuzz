@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -12,6 +14,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
 import {StackActions, useNavigation} from '@react-navigation/native';
+import apiUrl from '../Utils/urls.js';
 
 interface Post {
   id: string;
@@ -99,26 +102,23 @@ const HomePageScreen = () => {
 
       if (userTokens && Array.isArray(userTokens)) {
         userTokens.forEach(token => {
-          fetch(
-            'https://prayers-examined-pending-intensity.trycloudflare.com/send-noti-user',
-            {
-              method: 'post',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                token: token,
-                data: {
-                  title: 'New Like',
-                  body: `${likerName} liked your post!`,
-                  redirect_to: 'PostScreen',
-                  postId: postId,
-                  userId: userId,
-                  imageUrl: imageUrl,
-                },
-              }),
+          fetch(`${apiUrl}/send-noti-user`, {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          );
+            body: JSON.stringify({
+              token: token,
+              data: {
+                title: 'New Like',
+                body: `${likerName} liked your post!`,
+                redirect_to: 'PostScreen',
+                postId: postId,
+                userId: userId,
+                imageUrl: imageUrl,
+              },
+            }),
+          });
         });
       } else {
         console.error('User tokens not found or not an array');

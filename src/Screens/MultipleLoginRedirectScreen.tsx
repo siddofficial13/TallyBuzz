@@ -7,7 +7,7 @@ import {useNavigation} from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
-import {API_BASE_URL} from '@env';
+import apiUrl from '../Utils/urls';
 const fetchToken = async () => {
   try {
     // Get a reference to the 'multipleLoginfcmtoken' collection
@@ -51,21 +51,18 @@ const MultipleLoginRedirectScreen = () => {
       // Check if token is not null
       if (token !== null) {
         // Send notification to the current device (device Z)
-        await fetch(
-          'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-authorised-login',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: token,
-              title: 'Authorized Login',
-              body: 'You are authorized to login from this device',
-              data: 'HomePageScreen',
-            }),
+        await fetch(`${apiUrl}/send-notification-authorised-login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
+          body: JSON.stringify({
+            token: token,
+            title: 'Authorized Login',
+            body: 'You are authorized to login from this device',
+            data: 'HomePageScreen',
+          }),
+        });
         // const tokenCollectionRef = firestore().collection(
         //   'multipleLoginfcmtoken',
         // );
@@ -80,7 +77,6 @@ const MultipleLoginRedirectScreen = () => {
         //   });
         //   await batch.commit();
         // }
-        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.log('No token found');
       }
@@ -100,21 +96,18 @@ const MultipleLoginRedirectScreen = () => {
       // Check if token is not null
       if (token !== null) {
         // Send notification to the current device (device Z)
-        await fetch(
-          'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-unauthorised-login',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: token,
-              title: 'Unauthorized Login',
-              body: 'You are not authorized to login from this device',
-              data: 'UnauthorisedLoginRedirectScreen',
-            }),
+        await fetch(`${apiUrl}/send-notification-unauthorised-login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
+          body: JSON.stringify({
+            token: token,
+            title: 'Unauthorized Login',
+            body: 'You are not authorized to login from this device',
+            data: 'UnauthorisedLoginRedirectScreen',
+          }),
+        });
         const tokenCollectionRef = firestore().collection(
           'multipleLoginfcmtoken',
         );
@@ -129,7 +122,6 @@ const MultipleLoginRedirectScreen = () => {
           });
           await batch.commit();
         }
-        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.log('No token found');
       }

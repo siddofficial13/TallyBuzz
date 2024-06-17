@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {useNavigation} from '@react-navigation/native';
@@ -14,7 +16,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-
+import apiUrl from '../Utils/urls.js';
 const sendNotification = async userId => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
@@ -23,22 +25,19 @@ const sendNotification = async userId => {
     if (userTokens && Array.isArray(userTokens)) {
       await Promise.all(
         userTokens.map(async token => {
-          await fetch(
-            'https://prayers-examined-pending-intensity.trycloudflare.com/send-notification-user-update-profile',
-            {
-              method: 'post',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                token: token,
-                data: {
-                  redirect_to: 'ProfileScreen',
-                  userId: userId,
-                },
-              }),
+          await fetch(`${apiUrl}/send-notification-user-update-profile`, {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          );
+            body: JSON.stringify({
+              token: token,
+              data: {
+                redirect_to: 'ProfileScreen',
+                userId: userId,
+              },
+            }),
+          });
         }),
       );
     } else {

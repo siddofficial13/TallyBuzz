@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import React from 'react';
 import auth from '@react-native-firebase/auth';

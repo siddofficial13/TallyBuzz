@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import {StyleSheet, Text, View, ActivityIndicator} from 'react-native';
 import React from 'react';
 

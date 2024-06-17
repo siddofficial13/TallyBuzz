@@ -18,7 +18,7 @@ import messaging from '@react-native-firebase/messaging';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../Navigators/MainNavigator';
 import {StackActions} from '@react-navigation/native';
-
+import apiUrl from '../Utils/urls.js';
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 // Function to store a token
@@ -92,21 +92,18 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         const sendNotificationMultipleLogin = async () => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
-              fetch(
-                'https://prayers-examined-pending-intensity.trycloudflare.com/send-broadcast-multiple-login',
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    token: token,
-                    title: 'Logged in from another device',
-                    body: 'You have logged in from another device. Check to see the details.',
-                    data: 'MultipleLoginRedirectScreen',
-                  }),
+              fetch(`${apiUrl}/send-broadcast-multiple-login`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
                 },
-              );
+                body: JSON.stringify({
+                  token: token,
+                  title: 'Logged in from another device',
+                  body: 'You have logged in from another device. Check to see the details.',
+                  data: 'MultipleLoginRedirectScreen',
+                }),
+              });
             });
           }
           // console.log('API_BASE_URL:', API_BASE_URL);

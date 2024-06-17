@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 // import messaging from '@react-native-firebase/messaging';
 // import auth from '@react-native-firebase/auth';
 // import { Alert } from 'react-native';
@@ -120,7 +122,7 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
 import {useState} from 'react';
-
+import apiUrl from './urls.js';
 export async function requestUserPermission(): Promise<void> {
   try {
     const authStatus = await messaging().requestPermission();
@@ -349,26 +351,23 @@ const sendLikeNotificationToPostOwner = async (
 
     if (userTokens && Array.isArray(userTokens)) {
       userTokens.forEach(token => {
-        fetch(
-          'https://prayers-examined-pending-intensity.trycloudflare.com/send-noti-user',
-          {
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: token,
-              data: {
-                title: 'New Like',
-                body: `${likerName} liked your post!`,
-                redirect_to: 'PostScreen',
-                postId: postId,
-                userId: userId,
-                imageUrl: imageUrl,
-              },
-            }),
+        fetch(`${apiUrl}/send-noti-user`, {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        );
+          body: JSON.stringify({
+            token: token,
+            data: {
+              title: 'New Like',
+              body: `${likerName} liked your post!`,
+              redirect_to: 'PostScreen',
+              postId: postId,
+              userId: userId,
+              imageUrl: imageUrl,
+            },
+          }),
+        });
       });
 
       handleLike(postId);

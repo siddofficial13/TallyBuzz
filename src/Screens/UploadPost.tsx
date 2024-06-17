@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -15,7 +17,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import {launchImageLibrary} from 'react-native-image-picker';
-
+import apiUrl from '../Utils/urls.js';
 interface Post {
   id: string;
   title: string;
@@ -96,31 +98,28 @@ const UploadPost = () => {
             const userTokens = doc.data()?.fcmtoken;
             if (userTokens && Array.isArray(userTokens)) {
               userTokens.forEach(token => {
-                fetch(
-                  'https://prayers-examined-pending-intensity.trycloudflare.com/send-broadcast',
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      token: token,
-                      data: {
-                        title: 'New Post Alert',
-                        body: `${userName} just uploaded a new post!`,
-                        redirect_to: 'PostScreen',
-                        postId: postRef.id,
-                        userId: userId,
-                        imageUrl: imageUrl,
-                        showActions: 'true',
-                      },
-                      actions: [
-                        {title: 'Like', pressAction: {id: 'like'}},
-                        {title: 'Dismiss', pressAction: {id: 'dismiss'}},
-                      ],
-                    }),
+                fetch(`${apiUrl}/send-broadcast`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
                   },
-                );
+                  body: JSON.stringify({
+                    token: token,
+                    data: {
+                      title: 'New Post Alert',
+                      body: `${userName} just uploaded a new post!`,
+                      redirect_to: 'PostScreen',
+                      postId: postRef.id,
+                      userId: userId,
+                      imageUrl: imageUrl,
+                      showActions: 'true',
+                    },
+                    actions: [
+                      {title: 'Like', pressAction: {id: 'like'}},
+                      {title: 'Dismiss', pressAction: {id: 'dismiss'}},
+                    ],
+                  }),
+                });
               });
             }
           }
