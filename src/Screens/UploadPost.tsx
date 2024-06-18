@@ -113,6 +113,7 @@ const UploadPost = () => {
                       userId: userId,
                       imageUrl: imageUrl,
                       showActions: 'true',
+                      type: 'upload_post',
                     },
                     actions: [
                       {title: 'Like', pressAction: {id: 'like'}},

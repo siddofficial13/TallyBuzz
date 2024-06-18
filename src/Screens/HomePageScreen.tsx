@@ -91,6 +91,7 @@ const HomePageScreen = () => {
   }, []);
 
   const sendNoti2 = async (
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     userId: string,
     likerName: string,
     postId: string,
@@ -116,6 +117,7 @@ const HomePageScreen = () => {
                 postId: postId,
                 userId: userId,
                 imageUrl: imageUrl,
+                type: 'Like_post',
               },
             }),
           });

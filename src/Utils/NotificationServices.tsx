@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
+
 // import messaging from '@react-native-firebase/messaging';
 // import auth from '@react-native-firebase/auth';
 // import { Alert } from 'react-native';
