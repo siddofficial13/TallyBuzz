@@ -12,7 +12,6 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { Share } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
 interface Post {
   title: string;
@@ -73,35 +72,56 @@ const PostScreen: React.FC = () => {
 
     fetchPostAndLikes();
   }, [postId]);
+  const isAppInstalled = async () => {
+    const appUrlScheme = 'tallybuzz://'; // Your app's URL scheme
 
+    try {
+      // Check if the app is installed
+      const supported = await Linking.canOpenURL(appUrlScheme);
+      return supported;
+    } catch (error) {
+      console.error('Error checking if app is installed:', error);
+      return false;
+    }
+  };
   const handleShare = async () => {
     try {
-      const shareLink = `https://tallybuzz.dynalinks.app/post/${postId}`;
-      const options = {
-        message: `Check out this post on TallyBuzz: ${shareLink}`,
-      };
-
-      const result = await Share.share(options);
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          console.log('Shared');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Dismissed');
-      }
-
-      const packageName = 'com.tallybuzz';
-      const isAppInstalled = await DeviceInfo.isAppInstalled(packageName);
-
-      if (!isAppInstalled) {
-        const url = 'https://play.google.com/store/apps/details?id=com.tallyedge';
+      const appInstalled = await isAppInstalled();
+      if (!appInstalled) {
+        const url =
+          'https://play.google.com/store/apps/details?id=com.tallyedge';
         if (await Linking.canOpenURL(url)) {
           await Linking.openURL(url);
         }
+      } else {
+        const shareLink = `https://tallybuzz.dynalinks.app/post/${postId}`;
+        const options = {
+          message: `Check out this post on TallyBuzz: ${shareLink}`,
+        };
+
+        const result = await Share.share(options);
+
+        if (result.action === Share.sharedAction) {
+          if (result.activityType) {
+            console.log('Shared with activity type:', result.activityType);
+          } else {
+            console.log('Shared');
+          }
+        } else if (result.action === Share.dismissedAction) {
+          console.log('Dismissed');
+        }
       }
+
+      // Check if the app is not installed
+      // if (result.action === Share.sharedAction && result.activityType) {
+      //   if (result.activityType.includes('com.google.android.apps.docs')) {
+      //     const url =
+      //       'https://play.google.com/store/apps/details?id=com.tallyedge';
+      //     if (await Linking.canOpenURL(url)) {
+      //       await Linking.openURL(url);
+      //     }
+      //   }
+      // }
     } catch (error) {
       console.error('Error sharing:', error);
     }
@@ -118,7 +138,7 @@ const PostScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={{ color: '#000' }}>Post not found</Text>
+        <Text>Post not found</Text>
       </View>
     );
   }

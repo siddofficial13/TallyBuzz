@@ -15,6 +15,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import storage from '@react-native-firebase/storage';
 import { launchImageLibrary } from 'react-native-image-picker';
+import apiUrl from '../Utils/urls';
 
 
 interface Post {
@@ -96,9 +97,10 @@ const UploadPost = () => {
                     if (userId !== user.uid) {
                         const userTokens = doc.data()?.fcmtoken;
                         if (userTokens && Array.isArray(userTokens)) {
+                            const truncatedTimestamp = new Date().toISOString().toString();
                             userTokens.forEach(token => {
                                 fetch(
-                                    `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-broadcast`,
+                                    `${apiUrl}/send-broadcast`,
                                     {
                                         method: 'POST',
                                         headers: {
@@ -114,6 +116,7 @@ const UploadPost = () => {
                                                 userId: userId,
                                                 imageUrl: imageUrl,
                                                 showActions: 'true',
+                                                timestamp: truncatedTimestamp,
                                             },
                                             actions: [
                                                 { title: 'Like', pressAction: { id: 'like' } },

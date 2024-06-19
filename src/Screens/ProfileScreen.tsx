@@ -14,6 +14,7 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
+import apiUrl from '../Utils/urls';
 
 const sendNotification = async userId => {
     try {
@@ -21,10 +22,11 @@ const sendNotification = async userId => {
         const userTokens = userDoc.data()?.fcmtoken;
 
         if (userTokens && Array.isArray(userTokens)) {
+            const truncatedTimestamp = new Date().toISOString();
             await Promise.all(
                 userTokens.map(async token => {
                     await fetch(
-                        `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-notification-user-update-profile`,
+                        `${apiUrl}/send-notification-user-update-profile`,
                         {
                             method: 'post',
                             headers: {
@@ -35,6 +37,7 @@ const sendNotification = async userId => {
                                 data: {
                                     redirect_to: 'ProfileScreen',
                                     userId: userId,
+                                    timestamp: truncatedTimestamp.toString(),
                                 },
                             }),
                         },

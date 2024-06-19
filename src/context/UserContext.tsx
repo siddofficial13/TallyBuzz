@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 interface User {
     name: string;
@@ -48,14 +48,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     useEffect(() => {
-        fetchUserData();
-        checkUnseenNotifications();
-        const unsubscribe = firestore()
-            .collection('Users')
-            .doc(auth().currentUser?.uid)
-            .onSnapshot(checkUnseenNotifications);
-        return () => unsubscribe();
-    }, []);
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+            const userDocRef = firestore().collection('Users').doc(currentUser.uid);
+
+            const unsubscribe = userDocRef.onSnapshot((doc) => {
+                fetchUserData();
+                checkUnseenNotifications();
+            });
+
+            return () => unsubscribe();
+        }
+    }, [auth().currentUser]);
 
     return (
         <UserContext.Provider value={{ user, setUser, unseenNotifications, fetchUserData, checkUnseenNotifications }}>
@@ -64,7 +68,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 };
 
-export const useUser = () => {
+export const useUser = (): UserContextProps => {
     const context = useContext(UserContext);
     if (!context) {
         throw new Error('useUser must be used within a UserProvider');

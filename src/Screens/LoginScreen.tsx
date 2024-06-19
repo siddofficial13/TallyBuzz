@@ -17,6 +17,9 @@ import firestore from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
+import { StackActions } from '@react-navigation/native';
+import apiUrl from '../Utils/urls';
+import { loginUser } from '../Utils/authService';
 
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -49,26 +52,28 @@ const storeToken = async (token: string) => {
     console.error('Error storing token:', error);
   }
 };
-
 const LoginScreen = ({ navigation, route }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { screen, params } = route.params || {};
+  const { screen, params, intended_user } = route.params || {};
 
   const handleLogin = async () => {
     try {
       if (email.length > 0 && password.length > 0) {
-        const isUserLogin = await auth().signInWithEmailAndPassword(
-          email,
-          password,
-        );
+        const userId = await loginUser(email, password);
+        console.log(userId);
 
-        const userId = isUserLogin.user.uid;
+        if (intended_user && userId !== intended_user) {
+          Alert.alert('Error', 'This notification is not for you.');
+          return;
+        }
+
         const fcmToken = await messaging().getToken();
         await storeToken(fcmToken);
         // Fetch the user document
         const userDoc = await firestore().collection('Users').doc(userId).get();
         let tokensToNotify: string[] = [];
+        let fcm_token_array: string[] = [];
         if (userDoc.exists) {
           const userData = userDoc.data();
           const fcmtokens = userData?.fcmtoken || [];
@@ -86,12 +91,13 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
               fcmtoken: fcmtokens,
             });
           }
+          fcm_token_array = fcmtokens;
         }
         const sendNotificationMultipleLogin = async () => {
           if (tokensToNotify && Array.isArray(tokensToNotify)) {
             tokensToNotify.forEach(token => {
               fetch(
-                'https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-broadcast-multiple-login',
+                `${apiUrl}/send-broadcast-multiple-login`,
                 {
                   method: 'POST',
                   headers: {
@@ -107,14 +113,20 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
               );
             });
           }
+          // console.log('API_BASE_URL:', API_BASE_URL);
         };
-
-        await sendNotificationMultipleLogin();
-        navigation.reset({
-          index: 0,
-          routes: [{ name: screen || 'HomePageScreen', params }],
-        });
-
+        console.log(fcm_token_array.length);
+        if (fcm_token_array.length === 1) {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: screen || 'HomePageScreen', params }],
+          });
+        } else {
+          await sendNotificationMultipleLogin();
+          navigation.dispatch(
+            StackActions.replace(screen || 'LoadingScreen', params),
+          );
+        }
       } else {
         Alert.alert('Please enter your credentials');
       }

@@ -12,7 +12,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
 import { StackActions, useNavigation } from '@react-navigation/native';
-
+import apiUrl from '../Utils/urls';
 
 interface Post {
   id: string;
@@ -99,9 +99,10 @@ const HomePageScreen = () => {
       const userTokens = userDoc.data()?.fcmtoken;
 
       if (userTokens && Array.isArray(userTokens)) {
+        const truncatedTimestamp = new Date().toISOString();
         userTokens.forEach(token => {
           fetch(
-            `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-noti-user`,
+            `${apiUrl}/send-noti-user`,
             {
               method: 'post',
               headers: {
@@ -116,6 +117,7 @@ const HomePageScreen = () => {
                   postId: postId,
                   userId: userId,
                   imageUrl: imageUrl,
+                  timestamp: truncatedTimestamp.toString(),
                 },
               }),
             },

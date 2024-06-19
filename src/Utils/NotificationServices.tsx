@@ -114,9 +114,10 @@
 import messaging from '@react-native-firebase/messaging';
 import notifee, { EventType, AndroidImportance, AndroidStyle } from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
 import { useState } from 'react';
+import apiUrl from './urls';
 
 export async function requestUserPermission(): Promise<void> {
     try {
@@ -156,16 +157,48 @@ const subscribeToTopic = async (topic: string): Promise<void> => {
         console.error(`Error subscribing to topic ${topic}:`, error);
     }
 };
+const markNotificationAsSeen = async (userId: any, timestamp: any) => {
+    try {
+        const userRef = firestore().collection('Users').doc(userId);
+        const userDoc = await userRef.get();
+        console.log(timestamp);
+        if (userDoc.exists) {
+            const notifications = userDoc.data()?.notifications || [];
+
+            // Find the notification with the same timestamp and seen status as false
+            const notificationIndex = notifications.findIndex(
+                (notification) => notification.timestamp === timestamp && notification.seen === false
+            );
+
+            if (notificationIndex !== -1) {
+                // Update the seen status to true
+                notifications[notificationIndex].seen = true;
+
+                // Update the user's document
+                await userRef.update({ notifications: notifications });
+                console.log(`Notification marked as seen for user: ${userId}`);
+            } else {
+                console.log(`No matching notification found for user: ${userId}`);
+            }
+        } else {
+            console.error(`User document not found for user ID: ${userId}`);
+        }
+    } catch (error) {
+        console.error(`Error marking notification as seen for user: ${userId}`, error);
+    }
+};
+
 // Function to handle navigation based on notification data
 const handleNavigation = async (data: any) => {
     console.log('handleNavigation called with data:', data);
 
     if (data && data.redirect_to) {
-        const { redirect_to, postId, userId } = data;
-
+        const { redirect_to, postId, userId, timestamp } = data;
+        console.log(timestamp);
         const user = auth().currentUser;
         console.log('Current user:', user);
         if (user) {
+            markNotificationAsSeen(data.userId, timestamp)
             NavigationServices.navigate(redirect_to, { postId });
         }
         else {
@@ -321,9 +354,10 @@ const sendLikeNotificationToPostOwner = async (userId: any,
         const userTokens = userDoc.data()?.fcmtoken;
 
         if (userTokens && Array.isArray(userTokens)) {
+            const truncatedTimestamp = new Date().toISOString().toString();
             userTokens.forEach(token => {
                 fetch(
-                    `https://baker-subscribers-exhibits-outlets.trycloudflare.com/send-noti-user`,
+                    `${apiUrl}/send-noti-user`,
                     {
                         method: 'post',
                         headers: {
@@ -338,6 +372,7 @@ const sendLikeNotificationToPostOwner = async (userId: any,
                                 postId: postId,
                                 userId: userId,
                                 imageUrl: imageUrl,
+                                timestamp: truncatedTimestamp,
                             },
                         }),
                     },
