@@ -1,115 +1,3 @@
-// import messaging from '@react-native-firebase/messaging';
-// import auth from '@react-native-firebase/auth';
-// import { Alert } from 'react-native';
-// import NavigationServices from '../Navigators/NavigationServices';
-
-
-// export async function requestUserPermission(): Promise<void> {
-//     try {
-//         const authStatus = await messaging().requestPermission();
-//         const enabled =
-//             authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-//             authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-//         if (!enabled) {
-//             console.log('Permission not granted for FCM notifications.');
-//         } else {
-//             console.log('Authorization status:', authStatus);
-//             await getFcmToken();
-//         }
-//     } catch (error) {
-//         console.error('Error requesting FCM permission:', error);
-//     }
-// }
-
-// const getFcmToken = async (): Promise<void> => {
-//     try {
-//         const token = await messaging().getToken();
-//         console.log('FCM token:', token);
-//         await subscribeToTopic('allDevices');
-//     } catch (error) {
-//         console.error('Error fetching FCM token:', error);
-//     }
-// };
-
-// const subscribeToTopic = async (topic: string): Promise<void> => {
-//     try {
-//         await messaging().subscribeToTopic(topic);
-//         console.log(`Subscribed to topic: ${topic}`);
-//     } catch (error) {
-//         console.error(`Error subscribing to topic ${topic}:`, error);
-//     }
-// };
-
-// export async function notificationListeners(): Promise<void> {
-//     messaging().onMessage(async remoteMessage => {
-//         console.log('Received in foreground:', remoteMessage);
-//         const currentUser = auth().currentUser;
-
-//         if (currentUser?.uid && remoteMessage.data?.userId && remoteMessage.data.userId !== currentUser.uid) {
-//             console.log('Notification userId does not match current user. Notification will not be displayed.');
-//             return;
-//         }
-//         displayNotification(remoteMessage);
-//         // handleNavigation(remoteMessage);
-//     });
-
-//     messaging().onNotificationOpenedApp(remoteMessage => {
-//         console.log('Notification caused app to open from background state:', remoteMessage);
-//         const currentUser = auth().currentUser;
-
-//         if (currentUser?.uid && remoteMessage.data?.userId && remoteMessage.data.userId !== currentUser.uid) {
-//             console.log('Notification userId does not match current user. Notification will not be displayed.');
-//             NavigationServices.navigate('UnauthorisedLoginRedirectScreen');
-//             return;
-//         }
-//         handleNavigation(remoteMessage);
-//     });
-
-//     messaging().getInitialNotification().then(remoteMessage => {
-//         if (remoteMessage) {
-//             console.log('Notification caused app to open from quit state:', remoteMessage.notification);
-//             handleNavigation(remoteMessage);
-//         }
-//     });
-// }
-
-// const displayNotification = (remoteMessage: any): void => {
-//     const { notification } = remoteMessage;
-//     if (notification && notification.title && notification.body) {
-//         Alert.alert(
-//             notification.title,
-//             notification.body,
-//             [
-//                 {
-//                     text: 'View',
-//                     onPress: () => handleNavigation(remoteMessage),
-//                 },
-//             ],
-//             {
-//                 cancelable: true,
-//                 onDismiss: () => console.log('Notification dismissed'),
-//             },
-//         );
-//     }
-// };
-
-// const handleNavigation = (remoteMessage: any): void => {
-//     if (remoteMessage?.data && remoteMessage.data.redirect_to) {
-//         const { redirect_to, postId, userId } = remoteMessage.data;
-
-//         const user = auth().currentUser;
-//         console.log('Current user:', user);
-//         if (user) {
-//             NavigationServices.navigate(redirect_to, { postId });
-//         } else {
-//             NavigationServices.navigate('LoginScreen', {
-//                 screen: redirect_to,
-//                 params: { postId },
-//             });
-//         }
-//     }
-// };
 
 import messaging from '@react-native-firebase/messaging';
 import notifee, { EventType, AndroidImportance, AndroidStyle } from '@notifee/react-native';
@@ -118,6 +6,9 @@ import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
 import { useState } from 'react';
 import apiUrl from './urls';
+import * as Keychain from 'react-native-keychain';
+
+const USERS_KEY = 'logged_in_users';
 
 export async function requestUserPermission(): Promise<void> {
     try {
@@ -194,18 +85,57 @@ const handleNavigation = async (data: any) => {
 
     if (data && data.redirect_to) {
         const { redirect_to, postId, userId, timestamp } = data;
-        console.log(timestamp);
+        // console.log(timestamp);
+
         const user = auth().currentUser;
+        const intended_user = data?.userId;
         console.log('Current user:', user);
-        if (user) {
+
+        const navigateToLogin = (message: string) => {
+            NavigationServices.navigate('LoginScreen', {
+                screen: data.redirect_to,
+                params: { postId },
+                intended_user: data.userId,
+                time: timestamp,
+            });
+        };
+        const getUserCredentialsFromStorage = async (userId: any) => {
+            const existingUsers = await Keychain.getGenericPassword({ service: USERS_KEY });
+            if (existingUsers) {
+                const users = JSON.parse(existingUsers.password);
+                return users[userId];
+            }
+            return null;
+        };
+        if (user && intended_user && user.uid === intended_user) {
             markNotificationAsSeen(data.userId, timestamp)
+            console.log('Navigating as current user to:', data.redirect_to);
             NavigationServices.navigate(redirect_to, { postId });
         }
-        else {
-            NavigationServices.navigate('LoginScreen', {
-                screen: redirect_to,
-                params: { postId },
-            });
+        else if ((user && intended_user && user.uid !== intended_user) || (!user && intended_user)) {
+            console.log('Checking storage for intended user:', intended_user);
+            const storedCredentials = await getUserCredentialsFromStorage(intended_user);
+            if (storedCredentials) {
+                try {
+                    const userCredential = await auth().signInWithEmailAndPassword(storedCredentials.email, storedCredentials.password);
+                    console.log('Intended user signed in:', userCredential.user);
+
+                    console.log('Navigating as intended user to:', data.redirect_to);
+                    markNotificationAsSeen(data.userId, timestamp);
+                    NavigationServices.navigate(data.redirect_to, { postId });
+                } catch (error) {
+                    console.error('Error logging in as intended user:', error);
+                }
+
+            } else {
+                // No stored credentials for the intended user
+                console.log('No stored credentials for intended user. Navigating to login screen.');
+                navigateToLogin('');
+            }
+        } else {
+            // Case 4: Other cases
+            console.log('Navigating to Login with redirect to:', data.redirect_to);
+            navigateToLogin('');
         }
     }
 };
@@ -234,43 +164,44 @@ const handleNotificationActionPress = async (actionId: string, data: any): Promi
 };
 
 // Display notification using Notifee
-const displayNotification = async (message: any): Promise<void> => {
-    const { data } = message;
-    const actions = data.showActions === 'true' ? [
-        {
-            title: 'Like',
-            pressAction: { id: 'like' },
-        },
-        {
-            title: 'Dismiss',
-            pressAction: { id: 'dismiss' },
-        },
-    ] : [];
+// const displayNotification = async (message: any): Promise<void> => {
+//     const userId = auth().currentUser?.uid;
+//     const { data } = message;
+//     const actions = ((data.showActions === 'true') && (userId === data.userId)) ? [
+//         {
+//             title: 'Like',
+//             pressAction: { id: 'like' },
+//         },
+//         {
+//             title: 'Dismiss',
+//             pressAction: { id: 'dismiss' },
+//         },
+//     ] : [];
 
-    if (data.silentCheck !== 'true') {
-        await notifee.displayNotification({
-            title: data.title,
-            body: data.body,
-            android: {
-                channelId: 'default',
-                smallIcon: 'ic_launcher', // Your app icon
-                pressAction: {
-                    id: 'default',
-                },
-                style: (data.imageUrl !== undefined) ? {
-                    type: AndroidStyle.BIGPICTURE,
-                    picture: data.imageUrl,
+//     if (data.silentCheck !== 'true') {
+//         await notifee.displayNotification({
+//             title: data.title,
+//             body: data.body,
+//             android: {
+//                 channelId: 'default',
+//                 smallIcon: 'ic_launcher', // Your app icon
+//                 pressAction: {
+//                     id: 'default',
+//                 },
+//                 style: (data.imageUrl !== undefined) ? {
+//                     type: AndroidStyle.BIGPICTURE,
+//                     picture: data.imageUrl,
 
-                } : {
-                    type: AndroidStyle.INBOX,
-                    lines: [`${data.title}:${data.body}`],
-                },
-                actions,
-            },
-            data,
-        });
-    }
-};
+//                 } : {
+//                     type: AndroidStyle.INBOX,
+//                     lines: [`${data.title}:${data.body}`],
+//                 },
+//                 actions,
+//             },
+//             data,
+//         });
+//     }
+// };
 
 
 // Create notification channel
@@ -300,10 +231,10 @@ export const notificationListeners = async (): Promise<() => void> => {
     await createNotificationChannel();
 
     // Handle notification when app is in foreground
-    messaging().onMessage(async (remoteMessage) => {
-        console.log('Received in foreground:', remoteMessage);
-        await displayNotification(remoteMessage);
-    });
+    // messaging().onMessage(async (remoteMessage) => {
+    //     console.log('Received in foreground:', remoteMessage);
+    //     await displayNotification(remoteMessage);
+    // });
 
     // Handle notification when app is opened from background or quit state
     messaging().onNotificationOpenedApp((remoteMessage) => {
@@ -373,6 +304,7 @@ const sendLikeNotificationToPostOwner = async (userId: any,
                                 userId: userId,
                                 imageUrl: imageUrl,
                                 timestamp: truncatedTimestamp,
+                                type: 'like_post'
                             },
                         }),
                     },

@@ -52,16 +52,49 @@ const storeToken = async (token: string) => {
     console.error('Error storing token:', error);
   }
 };
+
+const markNotificationAsSeen = async (userId: any, timestamp: any) => {
+  try {
+    const userRef = firestore().collection('Users').doc(userId);
+    const userDoc = await userRef.get();
+    console.log(timestamp);
+    if (userDoc.exists) {
+      const notifications = userDoc.data()?.notifications || [];
+
+      // Find the notification with the same timestamp and seen status as false
+      const notificationIndex = notifications.findIndex(
+        (notification) => notification.timestamp === timestamp && notification.seen === false
+      );
+
+      if (notificationIndex !== -1) {
+        // Update the seen status to true
+        notifications[notificationIndex].seen = true;
+
+        // Update the user's document
+        await userRef.update({ notifications: notifications });
+        console.log(`Notification marked as seen for user: ${userId}`);
+      } else {
+        console.log(`No matching notification found for user: ${userId}`);
+      }
+    } else {
+      console.error(`User document not found for user ID: ${userId}`);
+    }
+  } catch (error) {
+    console.error(`Error marking notification as seen for user: ${userId}`, error);
+  }
+};
 const LoginScreen = ({ navigation, route }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { screen, params, intended_user } = route.params || {};
+  const { screen, params, intended_user, time } = route.params || {};
 
   const handleLogin = async () => {
     try {
       if (email.length > 0 && password.length > 0) {
         const userId = await loginUser(email, password);
         console.log(userId);
+        console.log(time);
+        console.log(intended_user);
 
         if (intended_user && userId !== intended_user) {
           Alert.alert('Error', 'This notification is not for you.');
@@ -117,12 +150,14 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         };
         console.log(fcm_token_array.length);
         if (fcm_token_array.length === 1) {
+          markNotificationAsSeen(intended_user, time)
           navigation.reset({
             index: 0,
             routes: [{ name: screen || 'HomePageScreen', params }],
           });
         } else {
           await sendNotificationMultipleLogin();
+          markNotificationAsSeen(intended_user, timestamp)
           navigation.dispatch(
             StackActions.replace(screen || 'LoadingScreen', params),
           );

@@ -34,7 +34,7 @@ const UploadPost = () => {
     const [description, setDescription] = useState('');
     const [imageUri, setImageUri] = useState('');
     const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
 
     const userId = auth().currentUser?.uid;
 
@@ -117,6 +117,7 @@ const UploadPost = () => {
                                                 imageUrl: imageUrl,
                                                 showActions: 'true',
                                                 timestamp: truncatedTimestamp,
+                                                type: 'upload_post',
                                             },
                                             actions: [
                                                 { title: 'Like', pressAction: { id: 'like' } },
@@ -142,52 +143,52 @@ const UploadPost = () => {
         }
     };
 
-    useEffect(() => {
-        const unsubscribe = firestore()
-            .collection('posts')
-            .orderBy('createdAt', 'desc')
-            .onSnapshot(
-                async snapshot => {
-                    const postsList: Post[] = [];
-                    for (const doc of snapshot.docs) {
-                        const postData = doc.data();
-                        const userDoc = await firestore()
-                            .collection('Users')
-                            .doc(postData.userId)
-                            .get();
-                        const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
+    // useEffect(() => {
+    //     const unsubscribe = firestore()
+    //         .collection('posts')
+    //         .orderBy('createdAt', 'desc')
+    //         .onSnapshot(
+    //             async snapshot => {
+    //                 const postsList: Post[] = [];
+    //                 for (const doc of snapshot.docs) {
+    //                     const postData = doc.data();
+    //                     const userDoc = await firestore()
+    //                         .collection('Users')
+    //                         .doc(postData.userId)
+    //                         .get();
+    //                     const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
 
-                        const likes = postData.likes || [];
-                        postsList.push({
-                            id: doc.id,
-                            title: postData.title,
-                            description: postData.description,
-                            imageUrl: postData.imageUrl,
-                            userId: postData.userId,
-                            likes: likes,
-                            createdAt: postData.createdAt,
-                            userName: userName,
-                        });
-                    }
-                    setPosts(postsList);
-                    setLoading(false);
-                },
-                error => {
-                    console.error('Error fetching posts:', error);
-                    setLoading(false);
-                },
-            );
+    //                     const likes = postData.likes || [];
+    //                     postsList.push({
+    //                         id: doc.id,
+    //                         title: postData.title,
+    //                         description: postData.description,
+    //                         imageUrl: postData.imageUrl,
+    //                         userId: postData.userId,
+    //                         likes: likes,
+    //                         createdAt: postData.createdAt,
+    //                         userName: userName,
+    //                     });
+    //                 }
+    //                 setPosts(postsList);
+    //                 setLoading(false);
+    //             },
+    //             error => {
+    //                 console.error('Error fetching posts:', error);
+    //                 setLoading(false);
+    //             },
+    //         );
 
-        return () => unsubscribe();
-    }, []);
+    //     return () => unsubscribe();
+    // }, []);
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#000" />
-            </View>
-        );
-    }
+    // if (loading) {
+    //     return (
+    //         <View style={styles.loadingContainer}>
+    //             <ActivityIndicator size="large" color="#000" />
+    //         </View>
+    //     );
+    // }
 
     return (
         <View style={styles.container}>

@@ -118,6 +118,7 @@ const HomePageScreen = () => {
                   userId: userId,
                   imageUrl: imageUrl,
                   timestamp: truncatedTimestamp.toString(),
+                  type: 'like_post',
                 },
               }),
             },
