@@ -117,7 +117,7 @@ const HomePageScreen = () => {
                 postId: postId,
                 userId: userId,
                 imageUrl: imageUrl,
-                type: 'Like_post',
+                type: 'like_post',
               },
             }),
           });

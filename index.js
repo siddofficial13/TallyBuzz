@@ -1,7 +1,7 @@
 /**
  * @format
  */
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {AppRegistry} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import App from './src/App';
@@ -14,14 +14,15 @@ import notifee, {
 } from '@notifee/react-native';
 
 const getGroupTitle = type => {
+  console.log('Notification type:', type); // Debugging log
+
   switch (type) {
-    case 'Like_post':
-      return 'Liked Notifications';
     case 'upload_post':
       return 'Uploaded Posts';
-
+    case 'like_post':
+      return 'Liked Post';
     default:
-      return 'Notifications';
+      return 'General';
   }
 };
 
@@ -80,6 +81,10 @@ const displayNotification = async message => {
         smallIcon: 'ic_launcher',
         timestamp: Date.now(),
         showTimestamp: true,
+        pressAction: {
+          id: 'default',
+        },
+
         style:
           data.imageUrl !== undefined
             ? {
@@ -99,6 +104,13 @@ const displayNotification = async message => {
 
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Message handled in the background!', remoteMessage);
+  await createNotificationChannel();
+
+  await displayNotification(remoteMessage);
+});
+
+messaging().onMessage(async remoteMessage => {
+  console.log('Message handled in the foreground!', remoteMessage);
   await createNotificationChannel();
 
   await displayNotification(remoteMessage);
