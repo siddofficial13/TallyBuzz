@@ -150,14 +150,14 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         };
         console.log(fcm_token_array.length);
         if (fcm_token_array.length === 1) {
-          markNotificationAsSeen(intended_user, time)
+          if (intended_user) markNotificationAsSeen(intended_user, time)
           navigation.reset({
             index: 0,
             routes: [{ name: screen || 'HomePageScreen', params }],
           });
         } else {
           await sendNotificationMultipleLogin();
-          markNotificationAsSeen(intended_user, timestamp)
+          markNotificationAsSeen(intended_user, time)
           navigation.dispatch(
             StackActions.replace(screen || 'LoadingScreen', params),
           );
@@ -169,6 +169,33 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
       console.log(error);
       Alert.alert('Login failed', error.message);
     }
+  };
+  const sendResetPassMail = async () => {
+    if (!email) {
+      Alert.alert('Please enter your email address to reset your password.');
+      return;
+    }
+    try {
+      const response = await fetch(`${apiUrl}/send-reset-pass-mail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      // const contentType = response.headers.get('content-type');
+      const text = await response.text();
+      if (response.ok) {
+        Alert.alert(`Password reset email sent successfully ${text} .`);
+      } else {
+        Alert.alert(`Failed to send password reset email. Server response: ${text}`);
+      }
+    }
+    catch (error: any) {
+      Alert.alert(`Error: ${error.message}`);
+    }
+
   };
 
   return (
@@ -192,6 +219,9 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         value={password}
         onChangeText={text => setPassword(text)}
       />
+      <TouchableOpacity onPress={sendResetPassMail}>
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -199,6 +229,7 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
         }}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
+
       <Text
         style={styles.signupText}
         onPress={() => {
@@ -261,5 +292,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     textDecorationLine: 'underline', // Optional: to add underline
+  },
+  forgotPasswordText: {
+    alignSelf: 'flex-end',
+    marginBottom: 12,
+    color: '#000',//'#007bff',
+    textDecorationLine: 'underline',
   },
 });

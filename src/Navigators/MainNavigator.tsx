@@ -23,6 +23,7 @@ import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { UserProvider } from '../context/UserContext';
 import SwitchUserScreen from '../Screens/SwitchUserScreen';
+import PageNotFoundScreen from '../Screens/PageNotFoundScreen'
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -39,6 +40,7 @@ export type RootStackParamList = {
   LoadingScreen: undefined;
   NotificationPage: undefined;
   SwitchUserScreen: undefined;
+  PageNotFoundScreen: { postId: any }
 };
 const { width } = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -169,6 +171,11 @@ const MainNavigator: React.FC = () => {
           <Stack.Screen
             name="SwitchUserScreen"
             component={SwitchUserScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PageNotFoundScreen"
+            component={PageNotFoundScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

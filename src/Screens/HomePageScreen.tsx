@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
+
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Image,
-  Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
-import { StackActions, useNavigation } from '@react-navigation/native';
-import apiUrl from '../Utils/urls';
+import { useNavigation } from '@react-navigation/native';
+import apiUrl from '../Utils/urls.js';
 
 interface Post {
   id: string;
@@ -25,21 +29,27 @@ interface Post {
   userName: string;
 }
 
+const PAGE_SIZE = 5;
+
 const HomePageScreen = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastPost, setLastPost] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const navigation = useNavigation();
 
   const userId = auth().currentUser?.uid;
 
   useEffect(() => {
-    const unsubscribePosts = firestore()
+    const unsubscribe = firestore()
       .collection('posts')
       .orderBy('createdAt', 'desc')
+      .limit(PAGE_SIZE)
       .onSnapshot(
-        async snapshot => {
-          const postsList: Post[] = [];
-          for (const doc of snapshot.docs) {
+        snapshot => {
+          const newPosts: Post[] = [];
+          snapshot.forEach(async doc => {
             const postData = doc.data();
             const userDoc = await firestore()
               .collection('Users')
@@ -48,7 +58,7 @@ const HomePageScreen = () => {
             const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
 
             const likes = postData.likes || [];
-            postsList.push({
+            newPosts.push({
               id: doc.id,
               title: postData.title,
               description: postData.description,
@@ -58,8 +68,9 @@ const HomePageScreen = () => {
               createdAt: postData.createdAt,
               userName: userName,
             });
-          }
-          setPosts(postsList);
+          });
+          setPosts(newPosts);
+          setLastPost(snapshot.docs[snapshot.docs.length - 1]);
           setLoading(false);
         },
         error => {
@@ -68,25 +79,81 @@ const HomePageScreen = () => {
         },
       );
 
-    const unsubscribeUsers = firestore()
-      .collection('Users')
-      .onSnapshot(snapshot => {
-        setPosts(prevPosts =>
-          prevPosts.map(post => {
-            const userDoc = snapshot.docs.find(doc => doc.id === post.userId);
-            if (userDoc) {
-              return { ...post, userName: userDoc.data().name };
-            }
-            return post;
-          }),
-        );
-      });
-
-    return () => {
-      unsubscribePosts();
-      unsubscribeUsers();
-    };
+    return () => unsubscribe();
   }, []);
+
+  const fetchMorePosts = async () => {
+    // eslint-disable-next-line curly
+    if (!lastPost || loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      const query = firestore()
+        .collection('posts')
+        .orderBy('createdAt', 'desc')
+        .startAfter(lastPost)
+        .limit(PAGE_SIZE);
+
+      const snapshot = await query.get();
+      const postsList: Post[] = await processSnapshot(snapshot);
+      setPosts(prevPosts => [...prevPosts, ...postsList]);
+      setLastPost(snapshot.docs[snapshot.docs.length - 1]);
+    } catch (error) {
+      console.error('Error fetching more posts:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const processSnapshot = async snapshot => {
+    const postsList: Post[] = [];
+    for (const doc of snapshot.docs) {
+      const postData = doc.data();
+      const userDoc = await firestore()
+        .collection('Users')
+        .doc(postData.userId)
+        .get();
+      const userName = userDoc.exists ? userDoc.data()?.name : 'Unknown';
+
+      const likes = postData.likes || [];
+      postsList.push({
+        id: doc.id,
+        title: postData.title,
+        description: postData.description,
+        imageUrl: postData.imageUrl,
+        userId: postData.userId,
+        likes: likes,
+        createdAt: postData.createdAt,
+        userName: userName,
+      });
+    }
+    return postsList;
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchPosts();
+    setRefreshing(false);
+  };
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const query = firestore()
+        .collection('posts')
+        .orderBy('createdAt', 'desc')
+        .limit(PAGE_SIZE);
+
+      const snapshot = await query.get();
+      const postsList: Post[] = await processSnapshot(snapshot);
+      setPosts(postsList);
+      setLastPost(snapshot.docs[snapshot.docs.length - 1]);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setLoading(false);
+    }
+  };
 
   const sendNoti2 = async (
     userId: string,
@@ -157,7 +224,9 @@ const HomePageScreen = () => {
             .collection('Users')
             .doc(userId)
             .get();
-          const likerName = likerDoc.exists ? likerDoc.data()?.name : 'TallyBuzz_User';
+          const likerName = likerDoc.exists
+            ? likerDoc.data()?.name
+            : 'TallyBuzz_User';
           sendNoti2(postData?.userId, likerName, postId, imageUrl);
         }
       }
@@ -166,54 +235,65 @@ const HomePageScreen = () => {
     }
   };
 
+  const renderPost = useCallback(
+    ({ item: post }: { item: Post }) => (
+      <View key={post.id} style={styles.post}>
+        <Text style={styles.userName}>{post.userName}</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('PostScreen', { postId: post.id })}>
+          {post.imageUrl ? (
+            <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
+          ) : null}
+        </TouchableOpacity>
+        <Text style={styles.postTitle}>{post.title}</Text>
+        <Text style={styles.postDescription}>{post.description}</Text>
+        <View style={styles.likeContainer}>
+          <TouchableOpacity onPress={() => handleLike(post.id, post.imageUrl)}>
+            <Image
+              source={
+                post.likes.includes(userId)
+                  ? require('../assets/heartred.png')
+                  : require('../assets/heart.png')
+              }
+              style={{ width: 24, height: 24 }}
+            />
+          </TouchableOpacity>
+          <Text style={styles.likeCount}>{post.likes.length}</Text>
+        </View>
+        <Text style={styles.postDate}>
+          {post.createdAt && post.createdAt.toDate
+            ? moment(post.createdAt.toDate()).format('LLL')
+            : 'Unknown date'}
+        </Text>
+      </View>
+    ),
+    [posts],
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={{ color: '#000' }}>Loading...</Text>
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* <Header /> */}
-      <ScrollView contentContainerStyle={styles.mainContent}>
-        {posts.map(post => (
-          <View key={post.id} style={styles.post}>
-            <Text style={styles.userName}>{post.userName}</Text>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('PostScreen', { postId: post.id })
-              }>
-              {post.imageUrl ? (
-                <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
-              ) : null}
-            </TouchableOpacity>
-            <Text style={styles.postTitle}>{post.title}</Text>
-            <Text style={styles.postDescription}>{post.description}</Text>
-            <View style={styles.likeContainer}>
-              <TouchableOpacity
-                onPress={() => handleLike(post.id, post.imageUrl)}>
-                <Image
-                  source={
-                    post.likes.includes(userId)
-                      ? require('../assets/heartred.png')
-                      : require('../assets/heart.png')
-                  }
-                  style={{ width: 24, height: 24 }}
-                />
-              </TouchableOpacity>
-              <Text style={styles.likeCount}>{post.likes.length}</Text>
-            </View>
-            <Text style={styles.postDate}>
-              {post.createdAt && post.createdAt.toDate
-                ? moment(post.createdAt.toDate()).format('LLL')
-                : 'Unknown date'}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-      {/* <Footer /> */}
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.mainContent}
+        onEndReached={fetchMorePosts}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? <ActivityIndicator size="large" color="#000" /> : null
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </View>
   );
 };
@@ -281,3 +361,7 @@ const styles = StyleSheet.create({
 });
 
 export default HomePageScreen;
+
+
+
+
