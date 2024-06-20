@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
+
 import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
@@ -80,6 +83,7 @@ const HomePageScreen = () => {
   }, []);
 
   const fetchMorePosts = async () => {
+    // eslint-disable-next-line curly
     if (!lastPost || loadingMore) return;
 
     setLoadingMore(true);
