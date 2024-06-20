@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -8,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
@@ -27,67 +26,91 @@ interface Notification {
 const NotificationPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // State to track whether the list is refreshing
   const navigation = useNavigation();
   const {checkUnseenNotifications} = useUser();
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        console.log('User not authenticated');
-        return;
-      }
-
-      const userDoc = await firestore()
-        .collection('Users')
-        .doc(currentUser.uid)
-        .get();
-      const userData = userDoc.data();
-
-      if (userData && userData.notifications) {
-        const formattedNotifications = userData.notifications.map(
-          (notification: any) => {
-            let timestamp;
-            if (notification.timestamp instanceof Date) {
-              timestamp = notification.timestamp.toISOString();
-            } else if (
-              notification.timestamp &&
-              notification.timestamp.toDate
-            ) {
-              timestamp = notification.timestamp.toDate().toISOString();
-            } else {
-              timestamp = new Date(notification.timestamp).toISOString();
-            }
-
-            return {
-              ...notification,
-              timestamp: timestamp,
-            };
-          },
-        );
-
-        const sortedNotifications = formattedNotifications.sort(
-          (a: Notification, b: Notification) => {
-            const aTimestamp = moment(a.timestamp);
-            const bTimestamp = moment(b.timestamp);
-            return bTimestamp.diff(aTimestamp);
-          },
-        );
-
-        setNotifications(sortedNotifications);
-      }
-
-      setLoading(false);
-    };
-
     fetchNotifications();
   }, []);
+
+  const fetchNotifications = async () => {
+    const currentUser = auth().currentUser;
+    if (!currentUser) {
+      console.log('User not authenticated');
+      setLoading(false);
+      return;
+    }
+
+    const userDoc = await firestore()
+      .collection('Users')
+      .doc(currentUser.uid)
+      .get();
+    const userData = userDoc.data();
+
+    if (userData && userData.notifications) {
+      const formattedNotifications = userData.notifications.map(
+        (notification: any) => {
+          let timestamp;
+          if (notification.timestamp instanceof Date) {
+            timestamp = notification.timestamp.toISOString();
+          } else if (notification.timestamp && notification.timestamp.toDate) {
+            timestamp = notification.timestamp.toDate().toISOString();
+          } else {
+            timestamp = new Date(notification.timestamp).toISOString();
+          }
+
+          return {
+            ...notification,
+            timestamp: timestamp,
+          };
+        },
+      );
+
+      const sortedNotifications = formattedNotifications.sort(
+        (a: Notification, b: Notification) => {
+          const aTimestamp = moment(a.timestamp);
+          const bTimestamp = moment(b.timestamp);
+          return bTimestamp.diff(aTimestamp);
+        },
+      );
+
+      setNotifications(sortedNotifications);
+    }
+
+    setLoading(false);
+  };
 
   const handleNotificationPress = async (
     notification: Notification,
     index: number,
   ) => {
     const {redirect_to, postId} = notification;
+
+    // Check if postId exists in the posts collection
+    const postSnapshot = await firestore()
+      .collection('posts')
+      .doc(postId)
+      .get();
+    if (!postSnapshot.exists) {
+      // Update the seen status of the notification
+      const updatedNotifications = [...notifications];
+      updatedNotifications[index].seen = true;
+      setNotifications(updatedNotifications);
+
+      // Update the seen status in the Firestore
+      const currentUser = auth().currentUser;
+      await firestore().collection('Users').doc(currentUser?.uid).update({
+        notifications: updatedNotifications,
+      });
+
+      // Re-check unseen notifications status
+      await checkUnseenNotifications();
+
+      // If postId doesn't exist, navigate to PageNotFoundScreen
+      navigation.navigate('PageNotFoundScreen');
+      return;
+    }
 
     // Update the seen status of the notification
     const updatedNotifications = [...notifications];
@@ -124,13 +147,11 @@ const NotificationPage: React.FC = () => {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+    setRefreshing(false);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -138,7 +159,15 @@ const NotificationPage: React.FC = () => {
         data={notifications}
         renderItem={renderItem}
         keyExtractor={(item, index) => index.toString()}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      )}
     </View>
   );
 };
@@ -172,9 +201,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -25}, {translateY: -25}],
   },
 });
 

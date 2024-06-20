@@ -21,6 +21,7 @@ import LoadingScreen from '../Screens/LoadingScreen';
 import NotificationPage from '../Screens/NotificationPage';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import PageNotFoundScreen from '../Screens/PageNotFoundScreen';
 import {UserProvider} from '../context/UserContext';
 
 export type RootStackParamList = {
@@ -37,6 +38,7 @@ export type RootStackParamList = {
   UnauthorisedLoginRedirectScreen: undefined;
   LoadingScreen: undefined;
   NotificationPage: undefined;
+  PageNotFoundScreen: undefined;
 };
 const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -106,6 +108,11 @@ const MainNavigator: React.FC = () => {
           <Stack.Screen
             name="NotifyMeRedirectScreen"
             component={NotifyMeRedirectScreen}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="PageNotFoundScreen"
+            component={PageNotFoundScreen}
             options={{headerShown: false}}
           />
           <Stack.Screen
