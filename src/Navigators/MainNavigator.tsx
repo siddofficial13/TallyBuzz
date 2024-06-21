@@ -21,8 +21,9 @@ import LoadingScreen from '../Screens/LoadingScreen';
 import NotificationPage from '../Screens/NotificationPage';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
-import PageNotFoundScreen from '../Screens/PageNotFoundScreen';
 import {UserProvider} from '../context/UserContext';
+import SwitchUserScreen from '../Screens/SwitchUserScreen';
+import PageNotFoundScreen from '../Screens/PageNotFoundScreen';
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -38,7 +39,8 @@ export type RootStackParamList = {
   UnauthorisedLoginRedirectScreen: undefined;
   LoadingScreen: undefined;
   NotificationPage: undefined;
-  PageNotFoundScreen: undefined;
+  SwitchUserScreen: undefined;
+  PageNotFoundScreen: {postId: any};
 };
 const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -87,6 +89,7 @@ const MainNavigator: React.FC = () => {
     'ProfileScreen',
     'PostScreen',
     'NotificationPage',
+    'SwitchUserScreen',
   ].includes(currentRoute);
 
   return (
@@ -108,11 +111,6 @@ const MainNavigator: React.FC = () => {
           <Stack.Screen
             name="NotifyMeRedirectScreen"
             component={NotifyMeRedirectScreen}
-            options={{headerShown: false}}
-          />
-          <Stack.Screen
-            name="PageNotFoundScreen"
-            component={PageNotFoundScreen}
             options={{headerShown: false}}
           />
           <Stack.Screen
@@ -168,6 +166,16 @@ const MainNavigator: React.FC = () => {
           <Stack.Screen
             name="NotificationPage"
             component={NotificationPage}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="SwitchUserScreen"
+            component={SwitchUserScreen}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="PageNotFoundScreen"
+            component={PageNotFoundScreen}
             options={{headerShown: false}}
           />
         </Stack.Navigator>

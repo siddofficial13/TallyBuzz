@@ -1,7 +1,7 @@
 /**
  * @format
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import {AppRegistry} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import App from './src/App';
@@ -9,9 +9,9 @@ import {name as appName} from './app.json';
 import {createNotificationChannel} from './src/Utils/NotificationServices';
 import notifee, {
   AndroidStyle,
-  AndroidImportance,
   AndroidGroupAlertBehavior,
 } from '@notifee/react-native';
+import auth from '@react-native-firebase/auth';
 
 const getGroupTitle = type => {
   console.log('Notification type:', type); // Debugging log
@@ -25,12 +25,13 @@ const getGroupTitle = type => {
       return 'General';
   }
 };
+//   ((data.showActions === 'true') && (userId === data.userId))
 
 const displayNotification = async message => {
   const {data} = message;
-
+  const userId = auth().currentUser?.uid;
   const actions =
-    data.showActions === 'true'
+    data.showActions === 'true' && userId === data.userId
       ? [
           {
             title: 'Like',

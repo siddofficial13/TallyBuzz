@@ -16,13 +16,16 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import apiUrl from '../Utils/urls.js';
-const sendNotification = async userId => {
+import apiUrl from '../Utils/urls';
+import {storeUserCredentials} from '../Utils/authService';
+
+const sendNotification = async (userId: string, body: string) => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
     const userTokens = userDoc.data()?.fcmtoken;
 
     if (userTokens && Array.isArray(userTokens)) {
+      const truncatedTimestamp = new Date().toISOString();
       await Promise.all(
         userTokens.map(async token => {
           await fetch(`${apiUrl}/send-notification-user-update-profile`, {
@@ -33,8 +36,10 @@ const sendNotification = async userId => {
             body: JSON.stringify({
               token: token,
               data: {
+                body: body,
                 redirect_to: 'ProfileScreen',
                 userId: userId,
+                timestamp: truncatedTimestamp.toString(),
               },
             }),
           });
@@ -72,7 +77,7 @@ const ProfileScreen = () => {
           if (userData) {
             setName(userData.name || '');
             setEmail(user.email || '');
-            setPassword(userData.password || '');
+            // setPassword(userData.password || '');
           }
         }
       } catch (error) {
@@ -141,19 +146,19 @@ const ProfileScreen = () => {
           .doc(user.uid)
           .get();
         const userName = userDoc.data()?.name;
-        const userPass = userDoc.data()?.password;
-
-        if (userName === name && userPass === password) {
-          Alert.alert('Same name and password as previous');
+        // const userPass = userDoc.data()?.password;
+        let body = '';
+        if (userName === name && !password) {
+          Alert.alert('Same name as previous');
         } else {
           if (password) {
             try {
+              console.log('i m here');
               await reauthenticateUser(currentPassword);
               await user.updatePassword(password);
-              await firestore()
-                .collection('Users')
-                .doc(user.uid)
-                .update({password});
+              await storeUserCredentials(user.uid, email, password);
+              // await firestore().collection('Users').doc(user.uid).update({ password });
+              body = 'Password Updated and ';
             } catch (reauthError) {
               console.error('Re-authentication failed:', reauthError);
               Alert.alert(
@@ -167,9 +172,10 @@ const ProfileScreen = () => {
           if (name) {
             await firestore().collection('Users').doc(user.uid).update({name});
             setUser(prevState => ({...prevState, name}));
+            if (name !== userName) body = body + `User name changed to ${name}`;
           }
           console.log('Profile updated');
-          sendNotification(user.uid);
+          sendNotification(user.uid, body);
         }
       }
     } catch (error) {
@@ -252,7 +258,7 @@ const ProfileScreen = () => {
           placeholder="Update Password"
           placeholderTextColor="#999"
           secureTextEntry={true}
-          value={password}
+          // value={password}
           onChangeText={setPassword}
         />
         <TextInput

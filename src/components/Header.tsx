@@ -1,14 +1,36 @@
-import React from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import {useUser} from '../context/UserContext';
 import {useNavigation} from '@react-navigation/native';
 
 const Header: React.FC = () => {
   const {user, unseenNotifications} = useUser();
   const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleNotificationPress = () => {
     navigation.navigate('NotificationPage');
+  };
+
+  const handleUserNamePress = () => {
+    setModalVisible(true);
+  };
+
+  const handleAccountsPress = () => {
+    setModalVisible(false);
+    navigation.navigate('SwitchUserScreen');
+  };
+
+  const handleOutsidePress = () => {
+    setModalVisible(false);
   };
 
   return (
@@ -19,11 +41,13 @@ const Header: React.FC = () => {
         resizeMode="contain"
       />
       <View style={styles.userInfo}>
-        <Text style={styles.userName}>{user.name}</Text>
+        <TouchableOpacity onPress={handleUserNamePress}>
+          <Text style={styles.userName}>{user.name}</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleNotificationPress}>
           <View style={styles.notificationContainer}>
             <Image
-              source={require('../assets/notification.png')} // Add your notification image
+              source={require('../assets/notification.png')}
               style={styles.notificationIcon}
               resizeMode="contain"
             />
@@ -31,6 +55,21 @@ const Header: React.FC = () => {
           </View>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={handleOutsidePress}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity onPress={handleAccountsPress}>
+                <Text style={styles.modalOption}>Your Accounts</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -79,6 +118,24 @@ const styles = StyleSheet.create({
   headerImage: {
     width: 100,
     height: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // marginTop: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalOption: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
 

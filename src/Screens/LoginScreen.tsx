@@ -18,7 +18,9 @@ import messaging from '@react-native-firebase/messaging';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../Navigators/MainNavigator';
 import {StackActions} from '@react-navigation/native';
-import apiUrl from '../Utils/urls.js';
+import apiUrl from '../Utils/urls';
+import {loginUser} from '../Utils/authService';
+
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 // Function to store a token
@@ -50,20 +52,59 @@ const storeToken = async (token: string) => {
     console.error('Error storing token:', error);
   }
 };
+
+const markNotificationAsSeen = async (userId: any, timestamp: any) => {
+  try {
+    const userRef = firestore().collection('Users').doc(userId);
+    const userDoc = await userRef.get();
+    console.log(timestamp);
+    if (userDoc.exists) {
+      const notifications = userDoc.data()?.notifications || [];
+
+      // Find the notification with the same timestamp and seen status as false
+      const notificationIndex = notifications.findIndex(
+        (notification: {timestamp: any; seen: boolean}) =>
+          notification.timestamp === timestamp && notification.seen === false,
+      );
+
+      if (notificationIndex !== -1) {
+        // Update the seen status to true
+        notifications[notificationIndex].seen = true;
+
+        // Update the user's document
+        await userRef.update({notifications: notifications});
+        console.log(`Notification marked as seen for user: ${userId}`);
+      } else {
+        console.log(`No matching notification found for user: ${userId}`);
+      }
+    } else {
+      console.error(`User document not found for user ID: ${userId}`);
+    }
+  } catch (error) {
+    console.error(
+      `Error marking notification as seen for user: ${userId}`,
+      error,
+    );
+  }
+};
 const LoginScreen = ({navigation, route}: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const {screen, params} = route.params || {};
+  const {screen, params, intended_user, time} = route.params || {};
 
   const handleLogin = async () => {
     try {
       if (email.length > 0 && password.length > 0) {
-        const isUserLogin = await auth().signInWithEmailAndPassword(
-          email,
-          password,
-        );
+        const userId = await loginUser(email, password);
+        console.log(userId);
+        console.log(time);
+        console.log(intended_user);
 
-        const userId = isUserLogin.user.uid;
+        if (intended_user && userId !== intended_user) {
+          Alert.alert('Error', 'This notification is not for you.');
+          return;
+        }
+
         const fcmToken = await messaging().getToken();
         await storeToken(fcmToken);
         // Fetch the user document
@@ -110,12 +151,16 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         };
         console.log(fcm_token_array.length);
         if (fcm_token_array.length === 1) {
+          if (intended_user) {
+            markNotificationAsSeen(intended_user, time);
+          }
           navigation.reset({
             index: 0,
             routes: [{name: screen || 'HomePageScreen', params}],
           });
         } else {
           await sendNotificationMultipleLogin();
+          markNotificationAsSeen(intended_user, time);
           navigation.dispatch(
             StackActions.replace(screen || 'LoadingScreen', params),
           );
@@ -126,6 +171,33 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
     } catch (error: any) {
       console.log(error);
       Alert.alert('Login failed', error.message);
+    }
+  };
+  const sendResetPassMail = async () => {
+    if (!email) {
+      Alert.alert('Please enter your email address to reset your password.');
+      return;
+    }
+    try {
+      const response = await fetch(`${apiUrl}/send-reset-pass-mail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({email}),
+      });
+
+      // const contentType = response.headers.get('content-type');
+      const text = await response.text();
+      if (response.ok) {
+        Alert.alert(`Password reset email sent successfully ${text} .`);
+      } else {
+        Alert.alert(
+          `Failed to send password reset email. Server response: ${text}`,
+        );
+      }
+    } catch (error: any) {
+      Alert.alert(`Error: ${error.message}`);
     }
   };
 
@@ -150,6 +222,9 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         value={password}
         onChangeText={text => setPassword(text)}
       />
+      <TouchableOpacity onPress={sendResetPassMail}>
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -157,6 +232,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         }}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
+
       <Text
         style={styles.signupText}
         onPress={() => {
@@ -219,5 +295,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     textDecorationLine: 'underline', // Optional: to add underline
+  },
+  forgotPasswordText: {
+    alignSelf: 'flex-end',
+    marginBottom: 12,
+    color: '#000', //'#007bff',
+    textDecorationLine: 'underline',
   },
 });

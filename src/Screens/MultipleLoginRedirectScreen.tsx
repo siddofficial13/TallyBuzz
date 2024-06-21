@@ -2,10 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import {StyleSheet, Text, View, TouchableOpacity, Alert} from 'react-native';
 import React from 'react';
-import auth from '@react-native-firebase/auth';
 import {useNavigation} from '@react-navigation/native';
-import messaging from '@react-native-firebase/messaging';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
 import apiUrl from '../Utils/urls';
 const fetchToken = async () => {
@@ -17,7 +14,7 @@ const fetchToken = async () => {
     const querySnapshot = await collectionRef.get();
 
     // Initialize an array to store token values
-    const tokens = [];
+    const tokens: any[] = [];
 
     // Iterate over each document snapshot
     querySnapshot.forEach(docSnapshot => {
@@ -122,6 +119,7 @@ const MultipleLoginRedirectScreen = () => {
           });
           await batch.commit();
         }
+        console.log('API_BASE_URL:', API_BASE_URL);
       } else {
         console.log('No token found');
       }
