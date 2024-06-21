@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    aspectRatio: 0.75,
+    aspectRatio: 0.98,
     borderRadius: 5,
     marginBottom: 16,
   },

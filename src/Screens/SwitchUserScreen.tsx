@@ -27,6 +27,10 @@ export default function SwitchUserScreen() {
     const handleUserSwitch = async (userId) => {
         try {
             await switchUser(userId);
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'HomePageScreen' }],
+            });
         } catch (error) {
             console.error(`Error switching user ${userId}:`, error);
         }
@@ -147,7 +151,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
     },
     activeUserItem: {
-        borderColor: '#ffcc00',
+        borderColor: '#000',
+        borderWidth: 3,
     },
     userEmail: {
         color: '#000',

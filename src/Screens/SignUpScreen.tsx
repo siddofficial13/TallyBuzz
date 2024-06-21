@@ -37,7 +37,7 @@ const SignUpScreen = () => {
         .doc(userId)
         .set({
           email: email,
-          password: password,
+          // password: password,
           name: name,
           fcmtoken: [token], // Store the FCM token in an array
         })

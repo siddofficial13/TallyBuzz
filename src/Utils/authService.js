@@ -58,4 +58,4 @@ async function switchUser(userId) {
     }
 }
 
-export { loginUser, switchUser, getAllStoredUsers, deleteUserCredentials };
+export { loginUser, switchUser, getAllStoredUsers, deleteUserCredentials, storeUserCredentials };
