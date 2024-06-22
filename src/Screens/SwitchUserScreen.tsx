@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert } from 'react-native';
 import { getAllStoredUsers, switchUser, loginUser, deleteUserCredentials } from '../Utils/authService';  // Ensure the correct path
 import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
@@ -44,6 +44,7 @@ export default function SwitchUserScreen() {
             const updatedUsers = await getAllStoredUsers();
             setUsers(updatedUsers);
         } catch (error) {
+            Alert.alert('Invalid Credentials')
             console.error('Error adding user:', error);
         }
     };
@@ -82,6 +83,7 @@ export default function SwitchUserScreen() {
                                 style={styles.switchButton}
                                 onPress={() => handleUserSwitch(userId)}
                             >
+
                                 <Text style={styles.buttonText}>Switch</Text>
                             </TouchableOpacity>
                             <TouchableOpacity

@@ -9,6 +9,7 @@ import { name as appName } from './app.json';
 import { createNotificationChannel } from './src/Utils/NotificationServices';
 import notifee, { AndroidStyle, AndroidGroupAlertBehavior } from '@notifee/react-native'
 import auth from '@react-native-firebase/auth'
+import { handleNavigation } from './src/Screens/SplashScreen';
 
 const getGroupTitle = type => {
     console.log('Notification type:', type); // Debugging log
@@ -113,7 +114,12 @@ messaging().onMessage(async remoteMessage => {
 
     await displayNotification(remoteMessage);
 });
+notifee.getInitialNotification().then(initialNotification => {
+    if (initialNotification) {
+        console.log('navigation from initial state');
+        handleNavigation(initialNotification.notification.data);
+    }
+});
 
 AppRegistry.registerComponent(appName, () => App);
 
-AppRegistry.registerComponent(appName, () => App);

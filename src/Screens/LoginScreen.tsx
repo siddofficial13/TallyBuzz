@@ -63,7 +63,7 @@ const markNotificationAsSeen = async (userId: any, timestamp: any) => {
 
       // Find the notification with the same timestamp and seen status as false
       const notificationIndex = notifications.findIndex(
-        (notification) => notification.timestamp === timestamp && notification.seen === false
+        (notification: any) => notification.timestamp === timestamp && notification.seen === false
       );
 
       if (notificationIndex !== -1) {
@@ -141,6 +141,7 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
                     title: 'Logged in from another device',
                     body: 'You have logged in from another device. Check to see the details.',
                     data: 'MultipleLoginRedirectScreen',
+                    userId: intended_user,
                   }),
                 },
               );
@@ -187,7 +188,7 @@ const LoginScreen = ({ navigation, route }: LoginProps) => {
       // const contentType = response.headers.get('content-type');
       const text = await response.text();
       if (response.ok) {
-        Alert.alert(`Password reset email sent successfully ${text} .`);
+        Alert.alert(`Password reset mail , check your mail box.`);
       } else {
         Alert.alert(`Failed to send password reset email. Server response: ${text}`);
       }

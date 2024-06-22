@@ -1,10 +1,9 @@
 
 import messaging from '@react-native-firebase/messaging';
-import notifee, { EventType, AndroidImportance, AndroidStyle } from '@notifee/react-native';
+import notifee, { EventType, AndroidImportance } from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
-import firestore, { Timestamp } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
-import { useState } from 'react';
 import apiUrl from './urls';
 import * as Keychain from 'react-native-keychain';
 
@@ -48,7 +47,7 @@ const subscribeToTopic = async (topic: string): Promise<void> => {
         console.error(`Error subscribing to topic ${topic}:`, error);
     }
 };
-const markNotificationAsSeen = async (userId: any, timestamp: any) => {
+export const markNotificationAsSeen = async (userId: any, timestamp: any) => {
     try {
         const userRef = firestore().collection('Users').doc(userId);
         const userDoc = await userRef.get();
@@ -58,7 +57,7 @@ const markNotificationAsSeen = async (userId: any, timestamp: any) => {
 
             // Find the notification with the same timestamp and seen status as false
             const notificationIndex = notifications.findIndex(
-                (notification) => notification.timestamp === timestamp && notification.seen === false
+                (notification: any) => notification.timestamp === timestamp && notification.seen === false
             );
 
             if (notificationIndex !== -1) {

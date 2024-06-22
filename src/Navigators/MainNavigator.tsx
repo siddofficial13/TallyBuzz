@@ -28,7 +28,7 @@ import PageNotFoundScreen from '../Screens/PageNotFoundScreen'
 export type RootStackParamList = {
   HomeScreen: undefined;
   SignUpScreen: undefined;
-  LoginScreen: { screen: any; params: any };
+  LoginScreen: { screen: any; params: any, intended_user: string, time: any };
   HomePageScreen: undefined;
   UploadPost: undefined;
   ProfileScreen: undefined;
