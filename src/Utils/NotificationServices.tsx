@@ -400,7 +400,7 @@
 // export default notificationListeners;
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
+
 import messaging from '@react-native-firebase/messaging';
 import notifee, {
   EventType,
@@ -509,6 +509,7 @@ const handleNavigation = async (data: any) => {
         time: timestamp,
       });
     };
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const getUserCredentialsFromStorage = async (userId: any) => {
       const existingUsers = await Keychain.getGenericPassword({
         service: USERS_KEY,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
+
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -64,7 +64,7 @@ export default function SwitchUserScreen() {
     }
   };
 
-  const handleRemoveUser = async userId => {
+  const handleRemoveUser = async (userId: string | undefined) => {
     try {
       await deleteUserCredentials(userId);
       const updatedUsers = await getAllStoredUsers();

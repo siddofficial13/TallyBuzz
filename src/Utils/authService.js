@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
 import auth from '@react-native-firebase/auth';
 import * as Keychain from 'react-native-keychain';
 

@@ -166,6 +166,7 @@ import notifee, {
 } from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
 import {handleNavigation} from './src/Screens/SplashScreen';
+// eslint-disable-next-line no-unused-vars
 import {BackHandler, DevSettings} from 'react-native';
 // global.notificationData = null;
 const getGroupTitle = type => {
@@ -285,6 +286,7 @@ messaging().onMessage(async remoteMessage => {
   await displayNotification(remoteMessage);
   messaging()
     .getInitialNotification()
+    // eslint-disable-next-line no-shadow
     .then(remoteMessage => {
       if (remoteMessage) {
         console.log('Initial notification opened app:', remoteMessage);

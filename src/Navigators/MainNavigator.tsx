@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, {useState, useEffect} from 'react';
 import {Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';

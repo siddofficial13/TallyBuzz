@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -111,17 +113,6 @@ const PostScreen: React.FC = () => {
           console.log('Dismissed');
         }
       }
-
-      // Check if the app is not installed
-      // if (result.action === Share.sharedAction && result.activityType) {
-      //   if (result.activityType.includes('com.google.android.apps.docs')) {
-      //     const url =
-      //       'https://play.google.com/store/apps/details?id=com.tallyedge';
-      //     if (await Linking.canOpenURL(url)) {
-      //       await Linking.openURL(url);
-      //     }
-      //   }
-      // }
     } catch (error) {
       console.error('Error sharing:', error);
     }
