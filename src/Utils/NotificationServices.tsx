@@ -1,9 +1,15 @@
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import messaging from '@react-native-firebase/messaging';
-import notifee, { EventType, AndroidImportance } from '@notifee/react-native';
+import notifee, {
+    EventType,
+    AndroidImportance,
+    AndroidStyle,
+} from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { Timestamp } from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
+import { useState } from 'react';
 import apiUrl from './urls';
 import * as Keychain from 'react-native-keychain';
 
@@ -57,7 +63,8 @@ export const markNotificationAsSeen = async (userId: any, timestamp: any) => {
 
             // Find the notification with the same timestamp and seen status as false
             const notificationIndex = notifications.findIndex(
-                (notification: any) => notification.timestamp === timestamp && notification.seen === false
+                notification =>
+                    notification.timestamp === timestamp && notification.seen === false,
             );
 
             if (notificationIndex !== -1) {
@@ -74,7 +81,10 @@ export const markNotificationAsSeen = async (userId: any, timestamp: any) => {
             console.error(`User document not found for user ID: ${userId}`);
         }
     } catch (error) {
-        console.error(`Error marking notification as seen for user: ${userId}`, error);
+        console.error(
+            `Error marking notification as seen for user: ${userId}`,
+            error,
+        );
     }
 };
 
@@ -99,7 +109,9 @@ const handleNavigation = async (data: any) => {
             });
         };
         const getUserCredentialsFromStorage = async (userId: any) => {
-            const existingUsers = await Keychain.getGenericPassword({ service: USERS_KEY });
+            const existingUsers = await Keychain.getGenericPassword({
+                service: USERS_KEY,
+            });
             if (existingUsers) {
                 const users = JSON.parse(existingUsers.password);
                 return users[userId];
@@ -107,16 +119,23 @@ const handleNavigation = async (data: any) => {
             return null;
         };
         if (user && intended_user && user.uid === intended_user) {
-            markNotificationAsSeen(data.userId, timestamp)
+            markNotificationAsSeen(data.userId, timestamp);
             console.log('Navigating as current user to:', data.redirect_to);
             NavigationServices.navigate(redirect_to, { postId });
-        }
-        else if ((user && intended_user && user.uid !== intended_user) || (!user && intended_user)) {
+        } else if (
+            (user && intended_user && user.uid !== intended_user) ||
+            (!user && intended_user)
+        ) {
             console.log('Checking storage for intended user:', intended_user);
-            const storedCredentials = await getUserCredentialsFromStorage(intended_user);
+            const storedCredentials = await getUserCredentialsFromStorage(
+                intended_user,
+            );
             if (storedCredentials) {
                 try {
-                    const userCredential = await auth().signInWithEmailAndPassword(storedCredentials.email, storedCredentials.password);
+                    const userCredential = await auth().signInWithEmailAndPassword(
+                        storedCredentials.email,
+                        storedCredentials.password,
+                    );
                     console.log('Intended user signed in:', userCredential.user);
 
                     console.log('Navigating as intended user to:', data.redirect_to);
@@ -125,10 +144,11 @@ const handleNavigation = async (data: any) => {
                 } catch (error) {
                     console.error('Error logging in as intended user:', error);
                 }
-
             } else {
                 // No stored credentials for the intended user
-                console.log('No stored credentials for intended user. Navigating to login screen.');
+                console.log(
+                    'No stored credentials for intended user. Navigating to login screen.',
+                );
                 navigateToLogin('');
             }
         } else {
@@ -140,10 +160,16 @@ const handleNavigation = async (data: any) => {
 };
 
 // Handle notification action press
-const handleNotificationActionPress = async (actionId: string, data: any): Promise<void> => {
+export const handleNotificationActionPress = async (
+    actionId: string,
+    data: any,
+): Promise<void> => {
     console.log('Notification action pressed:', actionId, 'with data:', data);
     const currentUser = auth().currentUser;
-    const likerDoc = await firestore().collection('Users').doc(currentUser?.uid).get();
+    const likerDoc = await firestore()
+        .collection('Users')
+        .doc(currentUser?.uid)
+        .get();
     const likerName = likerDoc.exists ? likerDoc.data()?.name : 'TallyBuzz_User';
 
     const postDoc = await firestore().collection('posts').doc(data.postId).get();
@@ -151,7 +177,12 @@ const handleNotificationActionPress = async (actionId: string, data: any): Promi
     console.log(postOwnerId);
     switch (actionId) {
         case 'like':
-            await sendLikeNotificationToPostOwner(postOwnerId, likerName, data.postId, data.imageUrl);
+            await sendLikeNotificationToPostOwner(
+                postOwnerId,
+                likerName,
+                data.postId,
+                data.imageUrl,
+            );
             break;
         case 'dismiss':
             console.log('Dismiss action pressed');
@@ -202,7 +233,6 @@ const handleNotificationActionPress = async (actionId: string, data: any): Promi
 //     }
 // };
 
-
 // Create notification channel
 export async function createNotificationChannel(): Promise<void> {
     await notifee.createChannel({
@@ -216,7 +246,10 @@ export async function createNotificationChannel(): Promise<void> {
 const handleBackgroundEvent = async ({ type, detail }: any) => {
     console.log('Background event:', type, 'Detail:', detail);
     if (type === EventType.ACTION_PRESS && detail.pressAction?.id) {
-        await handleNotificationActionPress(detail.pressAction.id, detail.notification?.data);
+        await handleNotificationActionPress(
+            detail.pressAction.id,
+            detail.notification?.data,
+        );
     } else if (type === EventType.DISMISSED) {
         console.log('Notification dismissed:', detail.notification);
     } else if (type === EventType.DELIVERED) {
@@ -236,24 +269,29 @@ export const notificationListeners = async (): Promise<() => void> => {
     // });
 
     // Handle notification when app is opened from background or quit state
-    messaging().onNotificationOpenedApp((remoteMessage) => {
+    messaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Notification opened app:', remoteMessage);
         handleNavigation(remoteMessage.data);
     });
 
     // Handle notification when app is opened from quit state
-    messaging().getInitialNotification().then((remoteMessage) => {
-        if (remoteMessage) {
-            console.log('Initial notification opened app:', remoteMessage);
-            handleNavigation(remoteMessage.data);
-        }
-    });
+    messaging()
+        .getInitialNotification()
+        .then(remoteMessage => {
+            if (remoteMessage) {
+                console.log('Initial notification opened app:', remoteMessage);
+                handleNavigation(remoteMessage.data);
+            }
+        });
 
     // Handle Notifee foreground events
     const unsubscribe = notifee.onForegroundEvent(async ({ type, detail }) => {
         console.log('Foreground event:', type, 'Detail:', detail);
         if (type === EventType.ACTION_PRESS && detail.pressAction?.id) {
-            await handleNotificationActionPress(detail.pressAction.id, detail.notification?.data);
+            await handleNotificationActionPress(
+                detail.pressAction.id,
+                detail.notification?.data,
+            );
         } else if (type === EventType.DISMISSED) {
             console.log('Notification dismissed:', detail.notification);
         } else if (type === EventType.PRESS) {
@@ -262,7 +300,8 @@ export const notificationListeners = async (): Promise<() => void> => {
     });
 
     // Handle Notifee background events
-    notifee.onBackgroundEvent(async (event) => {
+    notifee.onBackgroundEvent(async event => {
+        console.log('main notification services ke andar hu')
         await handleBackgroundEvent(event);
         if (event.type === EventType.PRESS) {
             handleNavigation(event.detail.notification?.data);
@@ -274,40 +313,39 @@ export const notificationListeners = async (): Promise<() => void> => {
 };
 
 // Function to send notification
-const sendLikeNotificationToPostOwner = async (userId: any,
+const sendLikeNotificationToPostOwner = async (
+    userId: any,
     likerName: string,
     postId: string,
-    imageUrl: string) => {
+    imageUrl: string,
+) => {
     try {
-        console.log(userId)
+        console.log(userId);
         const userDoc = await firestore().collection('Users').doc(userId).get();
         const userTokens = userDoc.data()?.fcmtoken;
 
         if (userTokens && Array.isArray(userTokens)) {
             const truncatedTimestamp = new Date().toISOString().toString();
             userTokens.forEach(token => {
-                fetch(
-                    `${apiUrl}/send-noti-user`,
-                    {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            token: token,
-                            data: {
-                                title: 'New Like',
-                                body: `${likerName} liked your post!`,
-                                redirect_to: 'PostScreen',
-                                postId: postId,
-                                userId: userId,
-                                imageUrl: imageUrl,
-                                timestamp: truncatedTimestamp,
-                                type: 'like_post'
-                            },
-                        }),
+                fetch(`${apiUrl}/send-noti-user`, {
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json',
                     },
-                );
+                    body: JSON.stringify({
+                        token: token,
+                        data: {
+                            title: 'New Like',
+                            body: `${likerName} liked your post!`,
+                            redirect_to: 'PostScreen',
+                            postId: postId,
+                            userId: userId,
+                            imageUrl: imageUrl,
+                            timestamp: truncatedTimestamp,
+                            type: 'like_post',
+                        },
+                    }),
+                });
             });
 
             handleLike(postId);

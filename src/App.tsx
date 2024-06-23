@@ -4,6 +4,10 @@ import React, { Component, useEffect } from 'react';
 import { View, Text, StyleSheet, PermissionsAndroid, Platform, Alert } from 'react-native';
 import MainNavigator from './Navigators/MainNavigator';
 import { notificationListeners, requestUserPermission } from './Utils/NotificationServices';
+import notifee, { AndroidStyle, AndroidGroupAlertBehavior, EventType } from '@notifee/react-native'
+import { handleNavigation } from './Screens/SplashScreen';
+
+
 
 const App = () => {
   useEffect(() => {
@@ -21,9 +25,19 @@ const App = () => {
     } else {
 
     }
-
+    notifee.getInitialNotification().then(initialNotification => {
+      if (initialNotification) {
+        console.log('navigation from initial state');
+        handleNavigation(initialNotification.notification.data);
+      }
+    });
   }, [])
-
+  // useEffect(() => {
+  //   if (global.notificationData) {
+  //     handleNavigation(global.notificationData);
+  //     global.notificationData = null; // Reset after handling
+  //   }
+  // }, []);
 
   return <MainNavigator />;
 };

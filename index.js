@@ -2,15 +2,17 @@
  * @format
  */
 
+
 import { AppRegistry } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import App from './src/App';
 import { name as appName } from './app.json';
-import { createNotificationChannel } from './src/Utils/NotificationServices';
-import notifee, { AndroidStyle, AndroidGroupAlertBehavior } from '@notifee/react-native'
+import { createNotificationChannel, handleNotificationActionPress } from './src/Utils/NotificationServices';
+import notifee, { AndroidStyle, AndroidGroupAlertBehavior, EventType } from '@notifee/react-native'
 import auth from '@react-native-firebase/auth'
 import { handleNavigation } from './src/Screens/SplashScreen';
-
+import { BackHandler, DevSettings } from 'react-native';
+// global.notificationData = null;
 const getGroupTitle = type => {
     console.log('Notification type:', type); // Debugging log
 
@@ -101,6 +103,19 @@ const displayNotification = async message => {
     }
 };
 
+const handleBackgroundEvent = async ({ type, detail }) => {
+    console.log('Background event:', type, 'Detail:', detail);
+    if (type === EventType.ACTION_PRESS && detail.pressAction?.id) {
+        await handleNotificationActionPress(
+            detail.pressAction.id,
+            detail.notification?.data,
+        );
+    } else if (type === EventType.DISMISSED) {
+        console.log('Notification dismissed:', detail.notification);
+    } else if (type === EventType.DELIVERED) {
+        // Handle delivery event if needed
+    }
+};
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('Message handled in the background!', remoteMessage);
     await createNotificationChannel();
@@ -113,6 +128,26 @@ messaging().onMessage(async remoteMessage => {
     await createNotificationChannel();
 
     await displayNotification(remoteMessage);
+    messaging()
+        .getInitialNotification()
+        .then(remoteMessage => {
+            if (remoteMessage) {
+                console.log('Initial notification opened app:', remoteMessage);
+                handleNavigation(remoteMessage.data);
+            }
+        });
+
+});
+
+// notifee.onBackgroundEvent(handleBackgroundEvent);
+notifee.onBackgroundEvent(async event => {
+    await handleBackgroundEvent(event);
+    // global.notificationData = event.detail.notification?.data;
+    if (event.type === 1) {
+        console.log(event.detail);
+        console.log('background event handler is working');
+        handleNavigation(event.detail.notification?.data);
+    }
 });
 notifee.getInitialNotification().then(initialNotification => {
     if (initialNotification) {
