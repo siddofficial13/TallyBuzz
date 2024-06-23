@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -40,13 +38,13 @@ const PostScreen: React.FC = () => {
 
   const route = useRoute<PostScreenRouteProp>();
   const {postId} = route.params;
-
   useEffect(() => {
     const fetchPostAndLikes = async () => {
       try {
         const postDoc = await firestore().collection('posts').doc(postId).get();
         if (!postDoc.exists) {
           console.error('Post not found');
+
           setLoading(false);
           return;
         }
@@ -214,7 +212,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    aspectRatio: 0.75,
+    aspectRatio: 0.98,
     borderRadius: 5,
     marginBottom: 16,
   },

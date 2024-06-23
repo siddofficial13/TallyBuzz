@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import {
   getAllStoredUsers,
@@ -38,7 +39,7 @@ export default function SwitchUserScreen() {
     console.log(auth().currentUser?.uid);
   }, []);
 
-  const handleUserSwitch = async (userId: string) => {
+  const handleUserSwitch = async userId => {
     try {
       await switchUser(userId);
       navigation.reset({
@@ -58,6 +59,7 @@ export default function SwitchUserScreen() {
       const updatedUsers = await getAllStoredUsers();
       setUsers(updatedUsers);
     } catch (error) {
+      Alert.alert('Invalid Credentials');
       console.error('Error adding user:', error);
     }
   };
@@ -91,13 +93,11 @@ export default function SwitchUserScreen() {
             ]}>
             <Text style={styles.userEmail}>{users[userId].email}</Text>
             <View style={styles.buttonContainer}>
-              {auth().currentUser?.uid !== userId && (
-                <TouchableOpacity
-                  style={styles.switchButton}
-                  onPress={() => handleUserSwitch(userId)}>
-                  <Text style={styles.buttonText}>Switch</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.switchButton}
+                onPress={() => handleUserSwitch(userId)}>
+                <Text style={styles.buttonText}>Switch</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.removeButton}
                 onPress={() => handleRemoveUser(userId)}>
@@ -166,13 +166,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   activeUserItem: {
-    borderColor: '#000', // Changed to black
-    backgroundColor: '#e6e6e6', // Slightly darkened background for active user
-    shadowColor: '#000', // Black shadow for glow effect
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 10, // Adds glow effect for Android
+    borderColor: '#000',
+    borderWidth: 3,
   },
   userEmail: {
     color: '#000',

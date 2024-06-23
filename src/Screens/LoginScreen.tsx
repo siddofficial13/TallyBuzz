@@ -23,36 +23,6 @@ import {loginUser} from '../Utils/authService';
 
 type LoginProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
-// Function to store a token
-const storeToken = async (token: string) => {
-  try {
-    // Reference to the collection
-    const tokenCollectionRef = firestore().collection('multipleLoginfcmtoken');
-
-    // Query the collection to get existing tokens
-    const snapshot = await tokenCollectionRef.get();
-
-    // If there are existing tokens, delete them
-    if (!snapshot.empty) {
-      // Use batch to perform multiple operations atomically
-      const batch = firestore().batch();
-
-      snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
-      await batch.commit();
-    }
-
-    // Store the new token
-    await tokenCollectionRef.add({token});
-
-    console.log('Token stored successfully');
-  } catch (error) {
-    console.error('Error storing token:', error);
-  }
-};
-
 const markNotificationAsSeen = async (userId: any, timestamp: any) => {
   try {
     const userRef = firestore().collection('Users').doc(userId);
@@ -63,7 +33,7 @@ const markNotificationAsSeen = async (userId: any, timestamp: any) => {
 
       // Find the notification with the same timestamp and seen status as false
       const notificationIndex = notifications.findIndex(
-        (notification: {timestamp: any; seen: boolean}) =>
+        (notification: any) =>
           notification.timestamp === timestamp && notification.seen === false,
       );
 
@@ -97,7 +67,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
       if (email.length > 0 && password.length > 0) {
         const userId = await loginUser(email, password);
         console.log(userId);
-        console.log(time);
+        // console.log(time);
         console.log(intended_user);
 
         if (intended_user && userId !== intended_user) {
@@ -106,8 +76,6 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
         }
 
         const fcmToken = await messaging().getToken();
-        await storeToken(fcmToken);
-        // Fetch the user document
         const userDoc = await firestore().collection('Users').doc(userId).get();
         let tokensToNotify: string[] = [];
         let fcm_token_array: string[] = [];
@@ -130,40 +98,12 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
           }
           fcm_token_array = fcmtokens;
         }
-        const sendNotificationMultipleLogin = async () => {
-          if (tokensToNotify && Array.isArray(tokensToNotify)) {
-            tokensToNotify.forEach(token => {
-              fetch(`${apiUrl}/send-broadcast-multiple-login`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  token: token,
-                  title: 'Logged in from another device',
-                  body: 'You have logged in from another device. Check to see the details.',
-                  data: 'MultipleLoginRedirectScreen',
-                }),
-              });
-            });
-          }
-          // console.log('API_BASE_URL:', API_BASE_URL);
-        };
-        console.log(fcm_token_array.length);
-        if (fcm_token_array.length === 1) {
-          if (intended_user) {
-            markNotificationAsSeen(intended_user, time);
-          }
+        if (intended_user) {
+          markNotificationAsSeen(intended_user, time);
           navigation.reset({
             index: 0,
             routes: [{name: screen || 'HomePageScreen', params}],
           });
-        } else {
-          await sendNotificationMultipleLogin();
-          markNotificationAsSeen(intended_user, time);
-          navigation.dispatch(
-            StackActions.replace(screen || 'LoadingScreen', params),
-          );
         }
       } else {
         Alert.alert('Please enter your credentials');
@@ -190,7 +130,7 @@ const LoginScreen = ({navigation, route}: LoginProps) => {
       // const contentType = response.headers.get('content-type');
       const text = await response.text();
       if (response.ok) {
-        Alert.alert(`Password reset email sent successfully ${text} .`);
+        Alert.alert('Password reset mail , check your mail box.');
       } else {
         Alert.alert(
           `Failed to send password reset email. Server response: ${text}`,
