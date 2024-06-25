@@ -1,4 +1,4 @@
-const apiUrl = 'https://matching-studies-bean-belle.trycloudflare.com';
+const apiUrl = 'https://boating-healthy-sections-neighbors.trycloudflare.com';
 
 // Export the URL so that it can be imported elsewhere
 export default apiUrl;

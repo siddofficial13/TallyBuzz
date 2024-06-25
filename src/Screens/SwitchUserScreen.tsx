@@ -3,9 +3,13 @@ import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert } fro
 import { getAllStoredUsers, switchUser, loginUser, deleteUserCredentials } from '../Utils/authService';  // Ensure the correct path
 import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigators/MainNavigator';
 
-export default function SwitchUserScreen() {
-    const navigation = useNavigation();
+type SwitchProps = NativeStackScreenProps<RootStackParamList, 'SwitchUserScreen'>;
+
+export default function SwitchUserScreen({ route, navigation }: SwitchProps) {
+    // const navigation = useNavigation();
     const [users, setUsers] = useState({});
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -24,7 +28,7 @@ export default function SwitchUserScreen() {
         console.log(auth().currentUser?.uid);
     }, []);
 
-    const handleUserSwitch = async (userId) => {
+    const handleUserSwitch = async (userId: string) => {
         try {
             await switchUser(userId);
             navigation.reset({
@@ -49,7 +53,7 @@ export default function SwitchUserScreen() {
         }
     };
 
-    const handleRemoveUser = async (userId) => {
+    const handleRemoveUser = async (userId: string) => {
         try {
             await deleteUserCredentials(userId);
             const updatedUsers = await getAllStoredUsers();

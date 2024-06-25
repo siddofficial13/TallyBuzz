@@ -32,7 +32,6 @@ export async function requestUserPermission(): Promise<void> {
         console.error('Error requesting FCM permission:', error);
     }
 }
-
 // Get FCM token and subscribe to topic
 const getFcmToken = async (): Promise<void> => {
     try {
@@ -43,7 +42,6 @@ const getFcmToken = async (): Promise<void> => {
         console.error('Error fetching FCM token:', error);
     }
 };
-
 // Subscribe to a topic
 const subscribeToTopic = async (topic: string): Promise<void> => {
     try {
@@ -63,7 +61,7 @@ export const markNotificationAsSeen = async (userId: any, timestamp: any) => {
 
             // Find the notification with the same timestamp and seen status as false
             const notificationIndex = notifications.findIndex(
-                notification =>
+                (notification: any) =>
                     notification.timestamp === timestamp && notification.seen === false,
             );
 
@@ -87,7 +85,6 @@ export const markNotificationAsSeen = async (userId: any, timestamp: any) => {
         );
     }
 };
-
 // Function to handle navigation based on notification data
 const handleNavigation = async (data: any) => {
     console.log('handleNavigation called with data:', data);
@@ -252,8 +249,6 @@ const handleBackgroundEvent = async ({ type, detail }: any) => {
         );
     } else if (type === EventType.DISMISSED) {
         console.log('Notification dismissed:', detail.notification);
-    } else if (type === EventType.DELIVERED) {
-        // Handle delivery event if needed
     }
 };
 
@@ -262,13 +257,6 @@ export const notificationListeners = async (): Promise<() => void> => {
     // Ensure channel is created
     await createNotificationChannel();
 
-    // Handle notification when app is in foreground
-    // messaging().onMessage(async (remoteMessage) => {
-    //     console.log('Received in foreground:', remoteMessage);
-    //     await displayNotification(remoteMessage);
-    // });
-
-    // Handle notification when app is opened from background or quit state
     messaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Notification opened app:', remoteMessage);
         handleNavigation(remoteMessage.data);

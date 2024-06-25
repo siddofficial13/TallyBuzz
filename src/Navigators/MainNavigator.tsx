@@ -15,8 +15,6 @@ import PostScreen from '../Screens/PostScreen';
 import NavigationServices from './NavigationServices'; // Adjust the path as needed
 import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
-import MultipleLoginRedirectScreen from '../Screens/MultipleLoginRedirectScreen';
-import UnauthorisedLoginRedirectScreen from '../Screens/UnauthorisedLoginRedirectScreen';
 import LoadingScreen from '../Screens/LoadingScreen';
 import NotificationPage from '../Screens/NotificationPage';
 import Footer from '../components/Footer';
@@ -35,8 +33,6 @@ export type RootStackParamList = {
   PostScreen: { postId: any };
   SplashScreen: undefined;
   NotifyMeRedirectScreen: undefined;
-  MultipleLoginRedirectScreen: undefined;
-  UnauthorisedLoginRedirectScreen: undefined;
   LoadingScreen: undefined;
   NotificationPage: undefined;
   SwitchUserScreen: undefined;
@@ -62,7 +58,7 @@ const linking = {
 
 const MainNavigator: React.FC = () => {
   const navigationRef = useNavigationContainerRef();
-  const [currentRoute, setCurrentRoute] = useState<string | undefined>(
+  const [currentRoute, setCurrentRoute] = useState<any>(
     undefined,
   );
   const [isReady, setIsReady] = useState(false);
@@ -151,16 +147,6 @@ const MainNavigator: React.FC = () => {
           <Stack.Screen
             name="PostScreen"
             component={PostScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MultipleLoginRedirectScreen"
-            component={MultipleLoginRedirectScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="UnauthorisedLoginRedirectScreen"
-            component={UnauthorisedLoginRedirectScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen

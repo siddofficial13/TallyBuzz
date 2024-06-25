@@ -163,6 +163,7 @@ const ProfileScreen = () => {
                         if (name !== userName) body = body + `User name changed to ${name}`;
                     }
                     console.log('Profile updated');
+                    console.log(body);
                     sendNotification(user.uid, body);
                 }
             }

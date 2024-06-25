@@ -43,7 +43,10 @@ const SignUpScreen = () => {
         })
         .then(() => {
           console.log('User added successfully!!');
-          navigation.navigate('LoginScreen');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'LoginScreen' }],
+          });
         })
         .catch(error => {
           console.log('Error adding user: ', error);

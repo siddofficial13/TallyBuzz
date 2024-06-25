@@ -44,7 +44,7 @@ const PostScreen: React.FC = () => {
         const postDoc = await firestore().collection('posts').doc(postId).get();
         if (!postDoc.exists) {
           console.error('Post not found');
-
+          console.log(postId);
           setLoading(false);
           return;
         }
@@ -138,7 +138,7 @@ const PostScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Post not found</Text>
+        <Text style={{ color: '#000' }}>Post not found</Text>
       </View>
     );
   }
