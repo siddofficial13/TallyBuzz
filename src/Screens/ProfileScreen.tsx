@@ -149,7 +149,7 @@ const ProfileScreen = () => {
                             await user.updatePassword(password);
                             await storeUserCredentials(user.uid, email, password);
                             // await firestore().collection('Users').doc(user.uid).update({ password });
-                            body = 'Password Updated and '
+                            body = 'Password Updated '
                         } catch (reauthError) {
                             console.error('Re-authentication failed:', reauthError);
                             Alert.alert('Re-authentication failed', 'Please re-authenticate to update your password.');
@@ -158,9 +158,10 @@ const ProfileScreen = () => {
                     }
 
                     if (name) {
+                        body += 'and '
                         await firestore().collection('Users').doc(user.uid).update({ name });
                         setUser(prevState => ({ ...prevState, name }));
-                        if (name !== userName) body = body + `User name changed to ${name}`;
+                        body = body + `User name changed to ${name}`;
                     }
                     console.log('Profile updated');
                     console.log(body);

@@ -61,7 +61,7 @@ export default function SwitchUserScreen({ route, navigation }: SwitchProps) {
             if (auth().currentUser?.uid === userId) {
                 await auth().signOut();
                 console.log(auth().currentUser?.uid);
-                navigation.navigate('LoginScreen');
+                navigation.navigate('HomeScreen');
             }
         } catch (error) {
             console.error(`Error removing user ${userId}:`, error);

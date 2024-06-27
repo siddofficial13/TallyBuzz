@@ -113,6 +113,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
                 if (user && screen === 'HomePageScreen') routeName = 'HomePageScreen';
                 else if (user && screen !== 'LoginScreen' && screen !== 'HomePageScreen') routeName = screen;
                 else if (screen === 'LoginScreen') routeName = 'LoginScreen';
+                else if (!user) routeName = 'HomeScreen'
                 // const routeName = (screen !== 'HomePageScreen' && screen !== 'LoginScreen') ? screen : 'HomePageScreen';
                 console.log(`${routeName} i am in splash screen`);
                 if (routeName === 'LoginScreen') navigateToLogin('');
