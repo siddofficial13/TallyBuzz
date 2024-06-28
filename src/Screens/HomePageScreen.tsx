@@ -61,7 +61,6 @@ const HomePageScreen = () => {
     return () => {
       unsubscribeUsers();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchPosts = useCallback(async () => {
@@ -106,9 +105,7 @@ const HomePageScreen = () => {
   }, []);
 
   const fetchMorePosts = useCallback(async () => {
-    if (loadingMore || allPostsLoaded) {
-      return;
-    }
+    if (loadingMore || allPostsLoaded) return;
 
     setLoadingMore(true);
 
@@ -162,7 +159,6 @@ const HomePageScreen = () => {
   }, [fetchPosts]);
 
   const sendNoti2 = async (
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     userId: string,
     likerName: string,
     postId: string,
@@ -240,9 +236,7 @@ const HomePageScreen = () => {
   };
 
   const renderFooter = () => {
-    if (!loadingMore) {
-      return null;
-    }
+    if (!loadingMore) return null;
     return (
       <View style={styles.loadingMoreContainer}>
         <ActivityIndicator size="large" color="#000" />

@@ -18,9 +18,18 @@ import {
 } from '../Utils/authService'; // Ensure the correct path
 import {useNavigation} from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../Navigators/MainNavigator';
+import firestore from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
 
-export default function SwitchUserScreen() {
-  const navigation = useNavigation();
+type SwitchProps = NativeStackScreenProps<
+  RootStackParamList,
+  'SwitchUserScreen'
+>;
+
+export default function SwitchUserScreen({route, navigation}: SwitchProps) {
+  // const navigation = useNavigation();
   const [users, setUsers] = useState({});
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +48,7 @@ export default function SwitchUserScreen() {
     console.log(auth().currentUser?.uid);
   }, []);
 
-  const handleUserSwitch = async userId => {
+  const handleUserSwitch = async (userId: string) => {
     try {
       await switchUser(userId);
       navigation.reset({
@@ -58,13 +67,37 @@ export default function SwitchUserScreen() {
       setPassword('');
       const updatedUsers = await getAllStoredUsers();
       setUsers(updatedUsers);
+
+      const fcmToken = await messaging().getToken();
+      const userDoc = await firestore().collection('Users').doc(userId).get();
+      let tokensToNotify: string[] = [];
+      let fcm_token_array: string[] = [];
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const fcmtokens = userData?.fcmtoken || [];
+
+        // Get tokens except the current one
+        tokensToNotify = fcmtokens.filter(
+          (token: string) => token !== fcmToken,
+        );
+
+        // Check if the current FCM token is already in the array
+        if (!fcmtokens.includes(fcmToken)) {
+          // Add the new FCM token to the array
+          fcmtokens.push(fcmToken);
+          await firestore().collection('Users').doc(userId).update({
+            fcmtoken: fcmtokens,
+          });
+        }
+        fcm_token_array = fcmtokens;
+      }
     } catch (error) {
       Alert.alert('Invalid Credentials');
       console.error('Error adding user:', error);
     }
   };
 
-  const handleRemoveUser = async (userId: string | undefined) => {
+  const handleRemoveUser = async (userId: string) => {
     try {
       await deleteUserCredentials(userId);
       const updatedUsers = await getAllStoredUsers();
@@ -72,7 +105,7 @@ export default function SwitchUserScreen() {
       if (auth().currentUser?.uid === userId) {
         await auth().signOut();
         console.log(auth().currentUser?.uid);
-        navigation.navigate('LoginScreen');
+        navigation.navigate('HomeScreen');
       }
     } catch (error) {
       console.error(`Error removing user ${userId}:`, error);

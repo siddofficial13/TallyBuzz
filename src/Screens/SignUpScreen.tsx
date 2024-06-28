@@ -34,13 +34,16 @@ const SignUpScreen = () => {
         .doc(userId)
         .set({
           email: email,
-          password: password,
+          // password: password,
           name: name,
           fcmtoken: [token], // Store the FCM token in an array
         })
         .then(() => {
           console.log('User added successfully!!');
-          navigation.navigate('LoginScreen');
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'LoginScreen'}],
+          });
         })
         .catch(error => {
           console.log('Error adding user: ', error);

@@ -93,7 +93,6 @@ const UploadPost = () => {
       const sendNotificationToUsers = async () => {
         const usersSnapshot = await firestore().collection('Users').get();
         usersSnapshot.forEach(doc => {
-          // eslint-disable-next-line @typescript-eslint/no-shadow
           const userId = doc.id;
 
           if (userId !== user.uid) {

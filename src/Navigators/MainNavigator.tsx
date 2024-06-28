@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import React, {useState, useEffect} from 'react';
 import {Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -16,6 +14,7 @@ import ProfileScreen from '../Screens/ProfileScreen';
 import PostScreen from '../Screens/PostScreen';
 import NavigationServices from './NavigationServices'; // Adjust the path as needed
 import SplashScreen from '../Screens/SplashScreen';
+import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
 import LoadingScreen from '../Screens/LoadingScreen';
 import NotificationPage from '../Screens/NotificationPage';
 import Footer from '../components/Footer';
@@ -23,7 +22,6 @@ import Header from '../components/Header';
 import {UserProvider} from '../context/UserContext';
 import SwitchUserScreen from '../Screens/SwitchUserScreen';
 import PageNotFoundScreen from '../Screens/PageNotFoundScreen';
-import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -60,9 +58,7 @@ const linking = {
 
 const MainNavigator: React.FC = () => {
   const navigationRef = useNavigationContainerRef();
-  const [currentRoute, setCurrentRoute] = useState<string | undefined>(
-    undefined,
-  );
+  const [currentRoute, setCurrentRoute] = useState<any>(undefined);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -151,7 +147,6 @@ const MainNavigator: React.FC = () => {
             component={PostScreen}
             options={{headerShown: false}}
           />
-
           <Stack.Screen
             name="NotificationPage"
             component={NotificationPage}

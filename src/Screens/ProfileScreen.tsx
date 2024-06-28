@@ -65,10 +65,8 @@ const ProfileScreen = () => {
   const [notifyStatus, setNotifyStatus] = useState(null);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     const fetchUserData = async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-shadow
         const user = auth().currentUser;
         if (user) {
           const userDoc = await firestore()
@@ -89,7 +87,6 @@ const ProfileScreen = () => {
 
     const checkNotifyStatus = async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-shadow
         const user = auth().currentUser;
         if (user) {
           firestore()
@@ -125,9 +122,7 @@ const ProfileScreen = () => {
     checkNotifyStatus();
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   const reauthenticateUser = async (currentPassword: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     const user = auth().currentUser;
     if (user && user.email) {
       const credentials = auth.EmailAuthProvider.credential(
@@ -144,7 +139,6 @@ const ProfileScreen = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-shadow
       const user = auth().currentUser;
       if (user) {
         const userDoc = await firestore()
@@ -164,7 +158,7 @@ const ProfileScreen = () => {
               await user.updatePassword(password);
               await storeUserCredentials(user.uid, email, password);
               // await firestore().collection('Users').doc(user.uid).update({ password });
-              body = 'Password Updated and ';
+              body = 'Password Updated ';
             } catch (reauthError) {
               console.error('Re-authentication failed:', reauthError);
               Alert.alert(
@@ -176,13 +170,13 @@ const ProfileScreen = () => {
           }
 
           if (name) {
+            body += 'and ';
             await firestore().collection('Users').doc(user.uid).update({name});
             setUser(prevState => ({...prevState, name}));
-            if (name !== userName) {
-              body = body + `User name changed to ${name}`;
-            }
+            body = body + `User name changed to ${name}`;
           }
           console.log('Profile updated');
+          console.log(body);
           sendNotification(user.uid, body);
         }
       }
@@ -194,7 +188,6 @@ const ProfileScreen = () => {
   const handleNotifyMe = async () => {
     setIsNotifyPressed(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-shadow
       const user = auth().currentUser;
       if (user) {
         const notifyDoc = await firestore()

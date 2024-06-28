@@ -1,8 +1,7 @@
 // urls.js
 
 // Define your URL here
-const apiUrl =
-  'https://governments-universal-remarkable-homeless.trycloudflare.com';
+const apiUrl = 'https://loads-variations-welding-adjustments.trycloudflare.com';
 
 // Export the URL so that it can be imported elsewhere
 export default apiUrl;

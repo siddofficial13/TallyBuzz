@@ -18,6 +18,12 @@ type SplashScreenProps = {
 
 let screen = 'HomePageScreen';
 let params: {postId?: string} = {};
+let intended_user = '';
+let time = '';
+let postid = '';
+let Redirect_to = '';
+let UserId = '';
+let Timestamp = '';
 
 export const handleNavigation = async (data: any) => {
   console.log('handleNavigation called with data:', data);
@@ -25,20 +31,24 @@ export const handleNavigation = async (data: any) => {
   if (data && data.redirect_to) {
     const {redirect_to, postId, userId, timestamp} = data;
 
+    postid = postId;
+    Redirect_to = redirect_to;
+    UserId = userId;
+    Timestamp = timestamp;
+
     const user = auth().currentUser;
-    const intended_user = data?.userId;
+    const intended_user_here = data?.userId;
     console.log('Current user:', user);
 
-    const navigateToLogin = (message: string) => {
-      NavigationServices.navigate('LoginScreen', {
-        screen: data.redirect_to,
-        params: {postId},
-        intended_user: data.userId,
-        time: timestamp,
-      });
-    };
+    // const navigateToLogin = (message: string) => {
+    //     NavigationServices.navigate('LoginScreen', {
+    //         screen: data.redirect_to,
+    //         params: { postId },
+    //         intended_user_here: data.userId,
+    //         time: timestamp,
+    //     });
+    // };
 
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     const getUserCredentialsFromStorage = async (userId: any) => {
       const existingUsers = await Keychain.getGenericPassword({
         service: USERS_KEY,
@@ -50,18 +60,18 @@ export const handleNavigation = async (data: any) => {
       return null;
     };
 
-    if (user && intended_user && user.uid === intended_user) {
+    if (user && intended_user_here && user.uid === intended_user_here) {
       markNotificationAsSeen(data.userId, timestamp);
       console.log('Navigating as current user to:', data.redirect_to);
       screen = redirect_to;
       params = {postId: data.postId};
     } else if (
-      (user && intended_user && user.uid !== intended_user) ||
-      (!user && intended_user)
+      (user && intended_user_here && user.uid !== intended_user_here) ||
+      (!user && intended_user_here)
     ) {
-      console.log('Checking storage for intended user:', intended_user);
+      console.log('Checking storage for intended user:', intended_user_here);
       const storedCredentials = await getUserCredentialsFromStorage(
-        intended_user,
+        intended_user_here,
       );
       if (storedCredentials) {
         try {
@@ -74,6 +84,7 @@ export const handleNavigation = async (data: any) => {
           console.log('Navigating as intended user to:', data.redirect_to);
           markNotificationAsSeen(data.userId, timestamp);
           screen = redirect_to;
+          console.log(screen);
           params = {postId: data.postId};
         } catch (error) {
           console.error('Error logging in as intended user:', error);
@@ -82,23 +93,50 @@ export const handleNavigation = async (data: any) => {
         console.log(
           'No stored credentials for intended user. Navigating to login screen.',
         );
-        navigateToLogin('');
+        // navigateToLogin('');
+        screen = 'LoginScreen';
+        intended_user = intended_user_here;
+        time = timestamp;
+        params = {postId: data.postId};
       }
     } else {
       console.log('Navigating to Login with redirect to:', data.redirect_to);
-      navigateToLogin('');
+      screen = 'LoginScreen';
+      intended_user = intended_user_here;
+      time = timestamp;
+      params = {postId: data.postId};
     }
   }
 };
 
 const SplashScreen: React.FC<SplashScreenProps> = ({navigation}) => {
+  const navigateToLogin = (message: string) => {
+    NavigationServices.navigate('LoginScreen', {
+      screen: Redirect_to,
+      params: params,
+      intended_user: UserId,
+      time: Timestamp,
+    });
+  };
   useEffect(() => {
     setTimeout(() => {
       Auth().onAuthStateChanged(user => {
-        const routeName = user !== null && screen ? screen : 'LoginScreen';
-        navigation.dispatch(StackActions.replace(routeName, {...params}));
+        let routeName = '';
+        if (user && screen === 'HomePageScreen') routeName = 'HomePageScreen';
+        else if (
+          user &&
+          screen !== 'LoginScreen' &&
+          screen !== 'HomePageScreen'
+        )
+          routeName = screen;
+        else if (screen === 'LoginScreen') routeName = 'LoginScreen';
+        else if (!user) routeName = 'HomeScreen';
+        // const routeName = (screen !== 'HomePageScreen' && screen !== 'LoginScreen') ? screen : 'HomePageScreen';
+        console.log(`${routeName} i am in splash screen`);
+        if (routeName === 'LoginScreen') navigateToLogin('');
+        else navigation.dispatch(StackActions.replace(routeName, {...params}));
       });
-    }, 1000);
+    }, 4000);
 
     return () => {};
   }, []);

@@ -146,7 +146,7 @@ const NotificationPage: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }

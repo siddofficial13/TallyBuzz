@@ -46,7 +46,7 @@ const PostScreen: React.FC = () => {
         const postDoc = await firestore().collection('posts').doc(postId).get();
         if (!postDoc.exists) {
           console.error('Post not found');
-
+          console.log(postId);
           setLoading(false);
           return;
         }
@@ -113,6 +113,17 @@ const PostScreen: React.FC = () => {
           console.log('Dismissed');
         }
       }
+
+      // Check if the app is not installed
+      // if (result.action === Share.sharedAction && result.activityType) {
+      //   if (result.activityType.includes('com.google.android.apps.docs')) {
+      //     const url =
+      //       'https://play.google.com/store/apps/details?id=com.tallyedge';
+      //     if (await Linking.canOpenURL(url)) {
+      //       await Linking.openURL(url);
+      //     }
+      //   }
+      // }
     } catch (error) {
       console.error('Error sharing:', error);
     }
@@ -129,7 +140,7 @@ const PostScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Post not found</Text>
+        <Text style={{color: '#000'}}>Post not found</Text>
       </View>
     );
   }
