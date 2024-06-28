@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
+import firestore from '@react-native-firebase/firestore';
+import messaging from '@react-native-firebase/messaging';
 
 type SwitchProps = NativeStackScreenProps<RootStackParamList, 'SwitchUserScreen'>;
 
@@ -47,6 +49,30 @@ export default function SwitchUserScreen({ route, navigation }: SwitchProps) {
             setPassword('');
             const updatedUsers = await getAllStoredUsers();
             setUsers(updatedUsers);
+
+            const fcmToken = await messaging().getToken();
+            const userDoc = await firestore().collection('Users').doc(userId).get();
+            let tokensToNotify: string[] = [];
+            let fcm_token_array: string[] = [];
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const fcmtokens = userData?.fcmtoken || [];
+
+                // Get tokens except the current one
+                tokensToNotify = fcmtokens.filter(
+                    (token: string) => token !== fcmToken,
+                );
+
+                // Check if the current FCM token is already in the array
+                if (!fcmtokens.includes(fcmToken)) {
+                    // Add the new FCM token to the array
+                    fcmtokens.push(fcmToken);
+                    await firestore().collection('Users').doc(userId).update({
+                        fcmtoken: fcmtokens,
+                    });
+                }
+                fcm_token_array = fcmtokens;
+            }
         } catch (error) {
             Alert.alert('Invalid Credentials')
             console.error('Error adding user:', error);
