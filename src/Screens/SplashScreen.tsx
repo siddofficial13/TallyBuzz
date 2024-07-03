@@ -23,7 +23,7 @@ let Redirect_to = ''
 let UserId = ''
 let Timestamp = ''
 
-export const handleNavigation = async (data: any) => {
+export const handleNavigationFromBackground = async (data: any) => {
     console.log('handleNavigation called with data:', data);
 
     if (data && data.redirect_to) {

@@ -7,13 +7,13 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
       <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
+        <action android:name="android.intent.action.SWITCHUSER"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="tallybuzz"/>
       </intent-filter>
       <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW" />
+        <action android:name="android.intent.action.SWITCHUSER" />
 
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />

@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, PermissionsAndroid, Platform, Alert } from 'rea
 import MainNavigator from './Navigators/MainNavigator';
 import { notificationListeners, requestUserPermission } from './Utils/NotificationServices';
 import notifee, { AndroidStyle, AndroidGroupAlertBehavior, EventType } from '@notifee/react-native'
-import { handleNavigation } from './Screens/SplashScreen';
+import { handleNavigationFromBackground } from './Screens/SplashScreen';
 
 
 
@@ -28,7 +28,7 @@ const App = () => {
     notifee.getInitialNotification().then(initialNotification => {
       if (initialNotification) {
         console.log('navigation from initial state');
-        handleNavigation(initialNotification.notification.data);
+        handleNavigationFromBackground(initialNotification.notification.data);
       }
     });
   }, [])
