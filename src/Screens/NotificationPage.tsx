@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState, useCallback} from 'react';
 import {
   StyleSheet,

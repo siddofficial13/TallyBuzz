@@ -12,6 +12,7 @@ import NavigationServices from '../Navigators/NavigationServices';
 import {useState} from 'react';
 import apiUrl from './urls';
 import * as Keychain from 'react-native-keychain';
+import {handleNavigationFromBackground} from '../Screens/SplashScreen';
 
 const USERS_KEY = 'logged_in_users';
 
@@ -161,6 +162,17 @@ export const handleNotificationActionPress = async (
   actionId: string,
   data: any,
 ): Promise<void> => {
+  const getUserCredentialsFromStorage = async (userId: any) => {
+    const existingUsers = await Keychain.getGenericPassword({
+      service: USERS_KEY,
+    });
+    if (existingUsers) {
+      const users = JSON.parse(existingUsers.password);
+      return users[userId];
+    }
+    return null;
+  };
+
   console.log('Notification action pressed:', actionId, 'with data:', data);
   const currentUser = auth().currentUser;
   const likerDoc = await firestore()
@@ -183,6 +195,24 @@ export const handleNotificationActionPress = async (
       break;
     case 'dismiss':
       console.log('Dismiss action pressed');
+      break;
+    case 'SwitchUser':
+      NavigationServices.navigate('LoadingScreen');
+      // const uid = data?.userId;
+      // const storedCredentials = await getUserCredentialsFromStorage(
+      //     uid,
+      // );
+      // const userCredential = await auth().signInWithEmailAndPassword(
+      //     storedCredentials.email,
+      //     storedCredentials.password,
+      // );
+      // const postId = data.postId;
+      handleNavigationFromBackground(data);
+      // console.log('Intended user signed in:', userCredential.user);
+      // markNotificationAsSeen(data.userId, data.timestamp);
+      // NavigationServices.navigate(data.redirect_to, { postId });
+
+      //  handleNavigationFromBackground(data);
       break;
     default:
       console.warn(`Unhandled notification action: ${actionId}`);

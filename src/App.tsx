@@ -19,7 +19,7 @@ import notifee, {
   AndroidGroupAlertBehavior,
   EventType,
 } from '@notifee/react-native';
-import {handleNavigation} from './Screens/SplashScreen';
+import {handleNavigationFromBackground} from './Screens/SplashScreen';
 
 const App = () => {
   useEffect(() => {
@@ -42,7 +42,7 @@ const App = () => {
     notifee.getInitialNotification().then(initialNotification => {
       if (initialNotification) {
         console.log('navigation from initial state');
-        handleNavigation(initialNotification.notification.data);
+        handleNavigationFromBackground(initialNotification.notification.data);
       }
     });
   }, []);

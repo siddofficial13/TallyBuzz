@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect} from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
 import Auth from '@react-native-firebase/auth';
@@ -25,7 +23,7 @@ let Redirect_to = '';
 let UserId = '';
 let Timestamp = '';
 
-export const handleNavigation = async (data: any) => {
+export const handleNavigationFromBackground = async (data: any) => {
   console.log('handleNavigation called with data:', data);
 
   if (data && data.redirect_to) {

@@ -16,7 +16,10 @@ import notifee, {
   EventType,
 } from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
-import {handleNavigation} from './src/Screens/SplashScreen';
+import {
+  handleNavigation,
+  handleNavigationFromBackground,
+} from './src/Screens/SplashScreen';
 import {BackHandler, DevSettings} from 'react-native';
 // global.notificationData = null;
 const getGroupTitle = type => {
@@ -36,20 +39,26 @@ const getGroupTitle = type => {
 const displayNotification = async message => {
   const {data} = message;
   const userId = auth().currentUser?.uid;
-  const actions =
-    data.showActions === 'true' && userId === data.userId
-      ? [
-          {
-            title: 'Like',
-            pressAction: {id: 'like'},
-          },
-          {
-            title: 'Dismiss',
-            pressAction: {id: 'dismiss'},
-          },
-        ]
-      : [];
-
+  let actions = [];
+  if (data.showActions === 'true' && userId === data.userId) {
+    actions = [
+      {
+        title: 'Like',
+        pressAction: {id: 'like'},
+      },
+      {
+        title: 'Dismiss',
+        pressAction: {id: 'dismiss'},
+      },
+    ];
+  } else if (userId !== data.userId) {
+    actions = [
+      {
+        title: 'Switch User',
+        pressAction: {id: 'SwitchUser'},
+      },
+    ];
+  }
   if (data.silentCheck !== 'true') {
     const groupId = `com.example.NOTIFICATION.${data.type}`;
     const groupTitle = getGroupTitle(data.type);
@@ -139,7 +148,7 @@ messaging().onMessage(async remoteMessage => {
     .then(remoteMessage => {
       if (remoteMessage) {
         console.log('Initial notification opened app:', remoteMessage);
-        handleNavigation(remoteMessage.data);
+        handleNavigationFromBackground(remoteMessage.data);
       }
     });
 });
@@ -151,13 +160,13 @@ notifee.onBackgroundEvent(async event => {
   if (event.type === 1) {
     console.log(event.detail);
     console.log('background event handler is working');
-    handleNavigation(event.detail.notification?.data);
+    handleNavigationFromBackground(event.detail.notification?.data);
   }
 });
 notifee.getInitialNotification().then(initialNotification => {
   if (initialNotification) {
     console.log('navigation from initial state');
-    handleNavigation(initialNotification.notification.data);
+    handleNavigationFromBackground(initialNotification.notification.data);
   }
 });
 
