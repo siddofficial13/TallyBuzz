@@ -77,3 +77,4 @@ yarn-error.log
 
 # Google Services
 /android/app/google-services.json
+/backend/service-account.json
