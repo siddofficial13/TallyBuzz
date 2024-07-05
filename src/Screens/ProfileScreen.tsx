@@ -21,7 +21,7 @@ const sendNotification = async (userId: string, body: string) => {
   try {
     const userDoc = await firestore().collection('Users').doc(userId).get();
     const userTokens = userDoc.data()?.fcmtoken;
-
+    const idToken = await auth().currentUser?.getIdToken(true);
     if (userTokens && Array.isArray(userTokens)) {
       const truncatedTimestamp = new Date().toISOString();
       await Promise.all(
@@ -30,6 +30,7 @@ const sendNotification = async (userId: string, body: string) => {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify({
               token: token,

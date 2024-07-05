@@ -167,6 +167,7 @@ const HomePageScreen = () => {
     try {
       const userDoc = await firestore().collection('Users').doc(userId).get();
       const userTokens = userDoc.data()?.fcmtoken;
+      const idToken = await auth().currentUser?.getIdToken(true);
 
       if (userTokens && Array.isArray(userTokens)) {
         const truncatedTimestamp = new Date().toISOString();
@@ -175,6 +176,7 @@ const HomePageScreen = () => {
             method: 'post',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify({
               token: token,

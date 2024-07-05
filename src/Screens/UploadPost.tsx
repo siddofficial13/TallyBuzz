@@ -86,7 +86,7 @@ const UploadPost = () => {
 
       const userDoc = await firestore().collection('Users').doc(user.uid).get();
       const userName = userDoc.exists ? userDoc.data()?.name : 'TallyBuzz_User';
-
+      const idToken = await auth().currentUser?.getIdToken(true);
       // Send notifications to all users except the one who posted
       const sendNotificationToUsers = async () => {
         const usersSnapshot = await firestore().collection('Users').get();
@@ -102,6 +102,7 @@ const UploadPost = () => {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
+                    Authorization: `Bearer ${idToken}`,
                   },
                   body: JSON.stringify({
                     token: token,

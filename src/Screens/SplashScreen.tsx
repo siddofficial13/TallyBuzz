@@ -38,15 +38,6 @@ export const handleNavigationFromBackground = async (data: any) => {
     const intended_user_here = data?.userId;
     console.log('Current user:', user);
 
-    // const navigateToLogin = (message: string) => {
-    //     NavigationServices.navigate('LoginScreen', {
-    //         screen: data.redirect_to,
-    //         params: { postId },
-    //         intended_user_here: data.userId,
-    //         time: timestamp,
-    //     });
-    // };
-
     const getUserCredentialsFromStorage = async (userId: any) => {
       const existingUsers = await Keychain.getGenericPassword({
         service: USERS_KEY,

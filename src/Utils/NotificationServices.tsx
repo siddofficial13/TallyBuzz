@@ -162,17 +162,6 @@ export const handleNotificationActionPress = async (
   actionId: string,
   data: any,
 ): Promise<void> => {
-  const getUserCredentialsFromStorage = async (userId: any) => {
-    const existingUsers = await Keychain.getGenericPassword({
-      service: USERS_KEY,
-    });
-    if (existingUsers) {
-      const users = JSON.parse(existingUsers.password);
-      return users[userId];
-    }
-    return null;
-  };
-
   console.log('Notification action pressed:', actionId, 'with data:', data);
   const currentUser = auth().currentUser;
   const likerDoc = await firestore()
@@ -341,7 +330,7 @@ const sendLikeNotificationToPostOwner = async (
     console.log(userId);
     const userDoc = await firestore().collection('Users').doc(userId).get();
     const userTokens = userDoc.data()?.fcmtoken;
-
+    const idToken = await auth().currentUser?.getIdToken(true);
     if (userTokens && Array.isArray(userTokens)) {
       const truncatedTimestamp = new Date().toISOString().toString();
       userTokens.forEach(token => {
@@ -349,6 +338,7 @@ const sendLikeNotificationToPostOwner = async (
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
           },
           body: JSON.stringify({
             token: token,
