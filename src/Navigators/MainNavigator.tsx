@@ -21,6 +21,7 @@ import Header from '../components/Header';
 import {UserProvider} from '../context/UserContext';
 import SwitchUserScreen from '../Screens/SwitchUserScreen';
 import PageNotFoundScreen from '../Screens/PageNotFoundScreen';
+import { URL_PREFIX_HTTPS, URL_PREFIX_APP } from '../Utils/constants'
 
 export type RootStackParamList = {
   HomeScreen: undefined;
@@ -40,7 +41,7 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
-  prefixes: ['https://tallybuzz.dynalinks.app/', 'tallybuzz://'],
+  prefixes: [URL_PREFIX_HTTPS, URL_PREFIX_APP],
   config: {
     screens: {
       HomeScreen: 'home',
