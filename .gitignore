@@ -37,6 +37,7 @@ local.properties
 # node.js
 #
 node_modules/
+/backend/node_modules/
 npm-debug.log
 yarn-error.log
 
@@ -78,3 +79,7 @@ yarn-error.log
 # Google Services
 /android/app/google-services.json
 /backend/service-account.json
+
+#Environment variables for backend
+.env
+/backend/.env
