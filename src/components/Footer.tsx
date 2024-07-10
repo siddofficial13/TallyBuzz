@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
@@ -11,15 +12,9 @@ export default function Footer() {
     navigation.navigate(screen);
   };
 
-  const getButtonStyle = (screen: string) => [
-    styles.footerButton,
-    // activeButton === screen && styles.activeButton,
-  ];
+  const getButtonStyle = (screen: string) => [styles.footerButton];
 
-  const getImageStyle = (screen: string) => [
-    styles.footerImage,
-    // activeButton === screen && styles.activeImage,
-  ];
+  const getImageStyle = (screen: string) => [styles.footerImage];
 
   return (
     <View style={styles.footer}>

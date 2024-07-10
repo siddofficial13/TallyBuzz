@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,6 @@ import {
   Image,
   Alert,
   ScrollView,
-  Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -32,11 +30,6 @@ const UploadPost = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState('');
-  const [posts, setPosts] = useState<Post[]>([]);
-  // const [loading, setLoading] = useState(true);
-
-  const userId = auth().currentUser?.uid;
-
   const handleChooseImage = () => {
     const options = {
       mediaType: 'photo',
@@ -141,7 +134,6 @@ const UploadPost = () => {
   };
   return (
     <View style={styles.container}>
-      {/* <Header /> */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.header}>Upload Post</Text>
         <TextInput
@@ -172,7 +164,6 @@ const UploadPost = () => {
           <Text style={styles.buttonText}>Submit Post</Text>
         </TouchableOpacity>
       </ScrollView>
-      {/* <Footer /> */}
     </View>
   );
 };

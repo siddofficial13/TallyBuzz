@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   Linking,
-  Platform,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import {RouteProp, useRoute} from '@react-navigation/native';
@@ -16,7 +15,7 @@ import {Share} from 'react-native';
 interface Post {
   title: string;
   description: string;
-  imageUrl: string; // Updated to imageUrl to match the upload structure
+  imageUrl: string;
   likes: string[];
   createdAt: any;
 }
@@ -111,17 +110,6 @@ const PostScreen: React.FC = () => {
           console.log('Dismissed');
         }
       }
-
-      // Check if the app is not installed
-      // if (result.action === Share.sharedAction && result.activityType) {
-      //   if (result.activityType.includes('com.google.android.apps.docs')) {
-      //     const url =
-      //       'https://play.google.com/store/apps/details?id=com.tallyedge';
-      //     if (await Linking.canOpenURL(url)) {
-      //       await Linking.openURL(url);
-      //     }
-      //   }
-      // }
     } catch (error) {
       console.error('Error sharing:', error);
     }

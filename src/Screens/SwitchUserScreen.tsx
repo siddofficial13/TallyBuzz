@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Image,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -14,7 +13,6 @@ import {
   loginUser,
   deleteUserCredentials,
 } from '../Utils/authService'; // Ensure the correct path
-import {useNavigation} from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../Navigators/MainNavigator';
@@ -27,7 +25,6 @@ type SwitchProps = NativeStackScreenProps<
 >;
 
 export default function SwitchUserScreen({route, navigation}: SwitchProps) {
-  // const navigation = useNavigation();
   const [users, setUsers] = useState({});
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

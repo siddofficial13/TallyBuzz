@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import {Dimensions} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   NavigationContainer,
@@ -12,7 +11,7 @@ import HomePageScreen from '../Screens/HomePageScreen';
 import UploadPost from '../Screens/UploadPost';
 import ProfileScreen from '../Screens/ProfileScreen';
 import PostScreen from '../Screens/PostScreen';
-import NavigationServices from './NavigationServices'; // Adjust the path as needed
+import NavigationServices from './NavigationServices';
 import SplashScreen from '../Screens/SplashScreen';
 import NotifyMeRedirectScreen from '../Screens/NotifyMeRedirectScreen';
 import LoadingScreen from '../Screens/LoadingScreen';
@@ -38,7 +37,6 @@ export type RootStackParamList = {
   SwitchUserScreen: undefined;
   PageNotFoundScreen: {postId: any};
 };
-const {width} = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {

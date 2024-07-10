@@ -1,15 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */
+
 import messaging from '@react-native-firebase/messaging';
-import notifee, {
-  EventType,
-  AndroidImportance,
-  AndroidStyle,
-} from '@notifee/react-native';
+import notifee, {EventType, AndroidImportance} from '@notifee/react-native';
 import auth from '@react-native-firebase/auth';
-import firestore, {Timestamp} from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import NavigationServices from '../Navigators/NavigationServices';
-import {useState} from 'react';
 import apiUrl from './urls';
 import * as Keychain from 'react-native-keychain';
 import {handleNavigationFromBackground} from '../Screens/SplashScreen';
@@ -187,67 +182,15 @@ export const handleNotificationActionPress = async (
       break;
     case 'SwitchUser':
       NavigationServices.navigate('LoadingScreen');
-      // const uid = data?.userId;
-      // const storedCredentials = await getUserCredentialsFromStorage(
-      //     uid,
-      // );
-      // const userCredential = await auth().signInWithEmailAndPassword(
-      //     storedCredentials.email,
-      //     storedCredentials.password,
-      // );
-      // const postId = data.postId;
-      handleNavigationFromBackground(data);
-      // console.log('Intended user signed in:', userCredential.user);
-      // markNotificationAsSeen(data.userId, data.timestamp);
-      // NavigationServices.navigate(data.redirect_to, { postId });
 
-      //  handleNavigationFromBackground(data);
+      handleNavigationFromBackground(data);
+
       break;
     default:
       console.warn(`Unhandled notification action: ${actionId}`);
       break;
   }
 };
-
-// Display notification using Notifee
-// const displayNotification = async (message: any): Promise<void> => {
-//     const userId = auth().currentUser?.uid;
-//     const { data } = message;
-//     const actions = ((data.showActions === 'true') && (userId === data.userId)) ? [
-//         {
-//             title: 'Like',
-//             pressAction: { id: 'like' },
-//         },
-//         {
-//             title: 'Dismiss',
-//             pressAction: { id: 'dismiss' },
-//         },
-//     ] : [];
-
-//     if (data.silentCheck !== 'true') {
-//         await notifee.displayNotification({
-//             title: data.title,
-//             body: data.body,
-//             android: {
-//                 channelId: 'default',
-//                 smallIcon: 'ic_launcher', // Your app icon
-//                 pressAction: {
-//                     id: 'default',
-//                 },
-//                 style: (data.imageUrl !== undefined) ? {
-//                     type: AndroidStyle.BIGPICTURE,
-//                     picture: data.imageUrl,
-
-//                 } : {
-//                     type: AndroidStyle.INBOX,
-//                     lines: [`${data.title}:${data.body}`],
-//                 },
-//                 actions,
-//             },
-//             data,
-//         });
-//     }
-// };
 
 // Create notification channel
 export async function createNotificationChannel(): Promise<void> {

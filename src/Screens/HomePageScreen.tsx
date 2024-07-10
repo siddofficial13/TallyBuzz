@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
@@ -158,7 +157,7 @@ const HomePageScreen = () => {
     setRefreshing(false);
   }, [fetchPosts]);
 
-  const sendNoti2 = async (
+  const sendLikeNotificationToPostOwner = async (
     userId: string,
     likerName: string,
     postId: string,
@@ -229,7 +228,12 @@ const HomePageScreen = () => {
           const likerName = likerDoc.exists
             ? likerDoc.data()?.name
             : 'TallyBuzz_User';
-          sendNoti2(postData?.userId, likerName, postId, imageUrl);
+          sendLikeNotificationToPostOwner(
+            postData?.userId,
+            likerName,
+            postId,
+            imageUrl,
+          );
         }
       }
     } catch (error) {
@@ -288,7 +292,6 @@ const HomePageScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <Header /> */}
       <FlatList
         data={posts}
         renderItem={renderItem}
@@ -300,7 +303,6 @@ const HomePageScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={refreshPosts} />
         }
       />
-      {/* <Footer /> */}
     </View>
   );
 };

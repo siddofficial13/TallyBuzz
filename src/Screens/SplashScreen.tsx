@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect} from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
 import Auth from '@react-native-firebase/auth';
-import {StackActions, useNavigation} from '@react-navigation/native';
+import {StackActions} from '@react-navigation/native';
 
 import NavigationServices from '../Navigators/NavigationServices';
 import {markNotificationAsSeen} from '../Utils/NotificationServices';
@@ -38,6 +40,7 @@ export const handleNavigationFromBackground = async (data: any) => {
     const intended_user_here = data?.userId;
     console.log('Current user:', user);
 
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const getUserCredentialsFromStorage = async (userId: any) => {
       const existingUsers = await Keychain.getGenericPassword({
         service: USERS_KEY,
@@ -82,7 +85,6 @@ export const handleNavigationFromBackground = async (data: any) => {
         console.log(
           'No stored credentials for intended user. Navigating to login screen.',
         );
-        // navigateToLogin('');
         screen = 'LoginScreen';
         intended_user = intended_user_here;
         time = timestamp;
@@ -111,19 +113,26 @@ const SplashScreen: React.FC<SplashScreenProps> = ({navigation}) => {
     setTimeout(() => {
       Auth().onAuthStateChanged(user => {
         let routeName = '';
-        if (user && screen === 'HomePageScreen') routeName = 'HomePageScreen';
-        else if (
+        if (user && screen === 'HomePageScreen') {
+          routeName = 'HomePageScreen';
+        } else if (
           user &&
           screen !== 'LoginScreen' &&
           screen !== 'HomePageScreen'
-        )
+        ) {
           routeName = screen;
-        else if (screen === 'LoginScreen') routeName = 'LoginScreen';
-        else if (!user) routeName = 'HomeScreen';
+        } else if (screen === 'LoginScreen') {
+          routeName = 'LoginScreen';
+        } else if (!user) {
+          routeName = 'HomeScreen';
+        }
         // const routeName = (screen !== 'HomePageScreen' && screen !== 'LoginScreen') ? screen : 'HomePageScreen';
         console.log(`${routeName} i am in splash screen`);
-        if (routeName === 'LoginScreen') navigateToLogin('');
-        else navigation.dispatch(StackActions.replace(routeName, {...params}));
+        if (routeName === 'LoginScreen') {
+          navigateToLogin('');
+        } else {
+          navigation.dispatch(StackActions.replace(routeName, {...params}));
+        }
       });
     }, 4000);
 
