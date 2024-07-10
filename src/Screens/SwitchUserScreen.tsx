@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
 import { getAllStoredUsers, switchUser, loginUser, deleteUserCredentials } from '../Utils/authService';  // Ensure the correct path
-import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
@@ -11,7 +10,6 @@ import messaging from '@react-native-firebase/messaging';
 type SwitchProps = NativeStackScreenProps<RootStackParamList, 'SwitchUserScreen'>;
 
 export default function SwitchUserScreen({ route, navigation }: SwitchProps) {
-    // const navigation = useNavigation();
     const [users, setUsers] = useState({});
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

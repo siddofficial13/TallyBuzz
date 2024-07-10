@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import Auth from '@react-native-firebase/auth';
-import { StackActions, useNavigation } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 
 import NavigationServices from '../Navigators/NavigationServices';
 import { markNotificationAsSeen } from '../Utils/NotificationServices';
@@ -72,7 +72,6 @@ export const handleNavigationFromBackground = async (data: any) => {
 
             } else {
                 console.log('No stored credentials for intended user. Navigating to login screen.');
-                // navigateToLogin('');
                 screen = 'LoginScreen';
                 intended_user = intended_user_here;
                 time = timestamp

@@ -18,7 +18,6 @@ const HomeScreen = () => {
       <StatusBar barStyle="dark-content" />
       <View style={styles.content}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
-        {/* <Text style={styles.title}>TallyBuzz</Text> */}
         <Text style={styles.subtitle}>
           Stay connected with your fellow employees.
         </Text>

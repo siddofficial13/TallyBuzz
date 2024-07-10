@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
-import React, { Component, useEffect } from 'react';
-import { View, Text, StyleSheet, PermissionsAndroid, Platform, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { PermissionsAndroid, Platform, Alert } from 'react-native';
 import MainNavigator from './Navigators/MainNavigator';
 import { notificationListeners, requestUserPermission } from './Utils/NotificationServices';
-import notifee, { AndroidStyle, AndroidGroupAlertBehavior, EventType } from '@notifee/react-native'
+import notifee from '@notifee/react-native'
 import { handleNavigationFromBackground } from './Screens/SplashScreen';
 
 
@@ -32,16 +32,10 @@ const App = () => {
       }
     });
   }, [])
-  // useEffect(() => {
-  //   if (global.notificationData) {
-  //     handleNavigation(global.notificationData);
-  //     global.notificationData = null; // Reset after handling
-  //   }
-  // }, []);
+
 
   return <MainNavigator />;
 };
 
 export default App;
 
-const styles = StyleSheet.create({});

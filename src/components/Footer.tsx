@@ -13,31 +13,35 @@ export default function Footer() {
 
     const getButtonStyle = (screen: string) => [
         styles.footerButton,
-        // activeButton === screen && styles.activeButton,
     ];
 
     const getImageStyle = (screen: string) => [
         styles.footerImage,
-        // activeButton === screen && styles.activeImage,
     ];
 
     return (
         <View style={styles.footer}>
-            <TouchableOpacity style={getButtonStyle('HomePageScreen')} onPress={() => handlePress('HomePageScreen')}>
+            <TouchableOpacity
+                style={getButtonStyle('HomePageScreen')}
+                onPress={() => handlePress('HomePageScreen')}>
                 <Image
                     source={require('../assets/home.png')}
                     style={getImageStyle('HomePageScreen')}
                     resizeMode="contain"
                 />
             </TouchableOpacity>
-            <TouchableOpacity style={getButtonStyle('UploadPost')} onPress={() => handlePress('UploadPost')}>
+            <TouchableOpacity
+                style={getButtonStyle('UploadPost')}
+                onPress={() => handlePress('UploadPost')}>
                 <Image
                     source={require('../assets/add.png')}
                     style={getImageStyle('UploadPost')}
                     resizeMode="contain"
                 />
             </TouchableOpacity>
-            <TouchableOpacity style={getButtonStyle('ProfileScreen')} onPress={() => handlePress('ProfileScreen')}>
+            <TouchableOpacity
+                style={getButtonStyle('ProfileScreen')}
+                onPress={() => handlePress('ProfileScreen')}>
                 <Image
                     source={require('../assets/profile.png')}
                     style={getImageStyle('ProfileScreen')}

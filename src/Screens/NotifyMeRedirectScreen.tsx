@@ -1,7 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import { RootStackParamList } from '../Navigators/MainNavigator';
-import { StackActions, useNavigation } from '@react-navigation/native';
 type NotifyMeRedirectScreenProps = {
     navigation: any; // Use the correct type for navigation if available
 };

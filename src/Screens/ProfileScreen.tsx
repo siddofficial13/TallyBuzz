@@ -76,7 +76,6 @@ const ProfileScreen = () => {
                     if (userData) {
                         setName(userData.name || '');
                         setEmail(user.email || '');
-                        // setPassword(userData.password || '');
                     }
 
                 }
@@ -138,7 +137,6 @@ const ProfileScreen = () => {
             if (user) {
                 const userDoc = await firestore().collection('Users').doc(user.uid).get();
                 const userName = userDoc.data()?.name;
-                // const userPass = userDoc.data()?.password;
                 let body = ''
                 if (userName === name && !password) {
                     Alert.alert('Same name as previous');
@@ -149,7 +147,6 @@ const ProfileScreen = () => {
                             await reauthenticateUser(currentPassword);
                             await user.updatePassword(password);
                             await storeUserCredentials(user.uid, email, password);
-                            // await firestore().collection('Users').doc(user.uid).update({ password });
                             body = 'Password Updated '
                         } catch (reauthError) {
                             console.error('Re-authentication failed:', reauthError);
@@ -243,7 +240,6 @@ const ProfileScreen = () => {
                     placeholder="Update Password"
                     placeholderTextColor="#999"
                     secureTextEntry={true}
-                    // value={password}
                     onChangeText={setPassword}
                 />
                 <TextInput

@@ -317,12 +317,10 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState } from 'react';
-import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import messaging from '@react-native-firebase/messaging';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigators/MainNavigator';
-import { StackActions } from '@react-navigation/native';
 import apiUrl from '../Utils/urls';
 import { loginUser } from '../Utils/authService';
 

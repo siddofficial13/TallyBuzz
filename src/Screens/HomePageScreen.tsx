@@ -147,7 +147,7 @@ const HomePageScreen = () => {
     setRefreshing(false);
   }, [fetchPosts]);
 
-  const sendNoti2 = async (
+  const sendLikeNotificationToPostOwner = async (
     userId: string,
     likerName: string,
     postId: string,
@@ -213,7 +213,7 @@ const HomePageScreen = () => {
         if (!postData?.likes.includes(userId)) {
           const likerDoc = await firestore().collection('Users').doc(userId).get();
           const likerName = likerDoc.exists ? likerDoc.data()?.name : 'TallyBuzz_User';
-          sendNoti2(postData?.userId, likerName, postId, imageUrl);
+          sendLikeNotificationToPostOwner(postData?.userId, likerName, postId, imageUrl);
         }
       }
     } catch (error) {
@@ -274,7 +274,6 @@ const HomePageScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* <Header /> */}
       <FlatList
         data={posts}
         renderItem={renderItem}
@@ -289,7 +288,6 @@ const HomePageScreen = () => {
           />
         }
       />
-      {/* <Footer /> */}
     </View>
   );
 };

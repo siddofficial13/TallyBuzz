@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Dimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   NavigationContainer,
@@ -38,7 +37,6 @@ export type RootStackParamList = {
   SwitchUserScreen: undefined;
   PageNotFoundScreen: { postId: any }
 };
-const { width } = Dimensions.get('window');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
